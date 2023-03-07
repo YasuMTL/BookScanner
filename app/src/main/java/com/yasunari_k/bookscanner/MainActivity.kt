@@ -14,7 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -23,7 +23,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.yasunari_k.bookscanner.ui.account.LoggedInScreen
-import com.yasunari_k.bookscanner.ui.authentication.AuthenticationScreen
 import com.yasunari_k.bookscanner.ui.borrow.BorrowScreen
 import com.yasunari_k.bookscanner.ui.main.MainScreen
 import com.yasunari_k.bookscanner.ui.returns.ReturnScreen
@@ -163,13 +162,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @Preview
-    @Composable
-    private fun AuthenticationScreenPreview() {
-        MaterialTheme {
-            AuthenticationScreen()
-        }
-    }
+//    @Preview
+//    @Composable
+//    private fun AuthenticationScreenPreview() {
+//        MaterialTheme {
+//            AuthenticationScreen()
+//        }
+//    }
 
     private fun NavHostController.navigateSingleTopTo(route: String) =
         this.navigate(route) {
@@ -188,8 +187,14 @@ class MainActivity : ComponentActivity() {
                 this,
                 android.Manifest.permission.CAMERA
             ) -> {
-                Log.i("kilo", "Permission previously granted")
+                Log.i("MainActivity", "Permission previously granted")
                 shouldShowCamera.value = true // 👈🏽
+            }
+            else -> {
+                Log.i("MainActivity", "Permission not granted yet")
+                ActivityCompat.requestPermissions(
+                    this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS
+                )
             }
         }
     }
