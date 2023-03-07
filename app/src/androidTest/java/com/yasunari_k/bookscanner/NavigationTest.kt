@@ -4,6 +4,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.performClick
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
 import org.junit.Before
@@ -32,6 +33,17 @@ class NavigationTest {
     fun bookScannerNavHost_verifyMainDisplayedAsStartDestination() {
         composeTestRule
             .onNodeWithContentDescription("Main Screen")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun bookScannerNavHost_clickAuthButton_navigatesToCameraView() {
+        composeTestRule
+            .onNodeWithContentDescription("Show Camera View")
+            .performClick()
+
+        composeTestRule
+            .onNodeWithContentDescription("Camera View")
             .assertIsDisplayed()
     }
 }

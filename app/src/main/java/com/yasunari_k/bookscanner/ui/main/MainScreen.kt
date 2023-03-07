@@ -30,7 +30,10 @@ fun MainScreen(
             Text(text = "MainScreen")
         }
         Row {
-            Button(onClick = onClickAuth) {
+            Button(
+                onClick = onClickAuth,
+                modifier = Modifier.semantics { contentDescription = "Show Camera View" }
+            ) {
                 Text(text = "Auth")
             }
             Button(onClick = onClickLoggedIn) {
