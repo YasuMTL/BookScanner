@@ -143,19 +143,35 @@ fun BookScannerNavHost(
             )
         }
         composable(route = AuthenticationCamera.route) {
-            //AuthenticationScreen()
-            CameraView(
-                onImageCaptured = {
-                    println("onImageCaptured has been called!")
-                    navController.popBackStack()
+            ScanView(
+                Barcode.FORMAT_QR_CODE,
+                onImageCapturedAndCorrectCode = {
+                    Log.d("AuthenticationCamera","Scanned QR Code is conformed!")
+                    navController
+                        .navigateSingleTopTo(LoggedIn.route)
                 },
+                onImageCapturedButNotCorrectCode = {
+                    Log.d("AuthenticationCamera","Scanned QR Code isn't conformed!")
+                    navController.popBackStack()
+                }
             )
         }
         composable(route = Account.route) {
             LoggedInScreen()
         }
         composable(route = Borrow.route) {
-            BorrowScreen()
+            ScanView(
+                Barcode.TYPE_ISBN,
+                onImageCapturedAndCorrectCode = {
+//                    navController
+//                        .navigateSingleTopTo(LoggedIn.route)
+                    Log.d("BorrowScreen", "Fetch an ISBN number successfully!")
+                },
+                onImageCapturedButNotCorrectCode = {
+                    Log.d("BorrowScreen", "Scanned Barcode doesn't contain ISBN number")
+                    //Toast.makeText(LocalContext.current, "Scanned Barcode doesn't contain ISBN number", Toast.LENGTH_SHORT).show()
+                }
+            )
         }
         composable(route = Return.route) {
             ReturnScreen()
