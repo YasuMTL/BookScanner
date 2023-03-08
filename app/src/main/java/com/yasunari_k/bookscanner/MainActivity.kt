@@ -22,8 +22,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.google.mlkit.vision.barcode.common.Barcode
 import com.yasunari_k.bookscanner.ui.account.LoggedInScreen
-import com.yasunari_k.bookscanner.ui.borrow.BorrowScreen
 import com.yasunari_k.bookscanner.ui.main.MainScreen
 import com.yasunari_k.bookscanner.ui.returns.ReturnScreen
 import com.yasunari_k.bookscanner.ui.theme.BookScannerTheme
@@ -139,54 +139,61 @@ fun BookScannerNavHost(
                 onClickAuth = {
                     navController
                         .navigateSingleTopTo(AuthenticationCamera.route)
-                    //Toast.makeText(this@MainActivity, "auth", Toast.LENGTH_SHORT).show()
-                },
-                onClickLoggedIn = {
-                    navController
-                        .navigateSingleTopTo(Account.route)
-                    //Toast.makeText(this@MainActivity, "loggedIn", Toast.LENGTH_SHORT).show()
-                },
-                onClickBorrow = {
-                    navController
-                        .navigateSingleTopTo(Borrow.route)
-                    //Toast.makeText(this@MainActivity, "borrow", Toast.LENGTH_SHORT).show()
-                },
-                onClickReturn = {
-                    navController
-                        .navigateSingleTopTo(Return.route)
-                    //Toast.makeText(this@MainActivity, "return", Toast.LENGTH_SHORT).show()
                 }
             )
         }
         composable(route = AuthenticationCamera.route) {
-            //AuthenticationScreen()
-            CameraView(
-                onImageCaptured = {
-                    println("onImageCaptured has been called!")
-                    navController.popBackStack()
+            ScanView(
+                Barcode.FORMAT_QR_CODE,
+                onImageCapturedAndCorrectCode = {
+                    Log.d("AuthenticationCamera","Scanned QR Code is conformed!")
+                    navController
+                        .navigateSingleTopTo(LoggedIn.route)
                 },
+                onImageCapturedButNotCorrectCode = {
+                    Log.d("AuthenticationCamera","Scanned QR Code isn't conformed!")
+                    navController.popBackStack()
+                }
             )
         }
-        composable(route = Account.route) {
-            LoggedInScreen()
+        composable(route = LoggedIn.route) {
+            LoggedInScreen(
+                onClickBorrow = {
+                    Log.d("LoggedInScreen","Need to scan a barcode for an ISBN number")
+                    navController
+                        .navigateSingleTopTo(Borrow.route)
+                },
+                onClickReturn = {
+                    Log.d("LoggedInScreen","Need to show Borrowed Book List")
+                    navController
+                        .navigateSingleTopTo(Return.route)
+                },
+                onClickLogout = {
+                    Log.d("LoggedInScreen","Logout and get back to MainScreen")
+                    navController
+                        .navigateSingleTopTo(Main.route)
+                }
+            )
         }
         composable(route = Borrow.route) {
-            BorrowScreen()
+            ScanView(
+                Barcode.TYPE_ISBN,
+                onImageCapturedAndCorrectCode = {
+//                    navController
+//                        .navigateSingleTopTo(LoggedIn.route)
+                    Log.d("BorrowScreen", "Fetch an ISBN number successfully!")
+                },
+                onImageCapturedButNotCorrectCode = {
+                    Log.d("BorrowScreen", "Scanned Barcode doesn't contain ISBN number")
+                    //Toast.makeText(LocalContext.current, "Scanned Barcode doesn't contain ISBN number", Toast.LENGTH_SHORT).show()
+                }
+            )
         }
         composable(route = Return.route) {
-            ReturnScreen()
+            ReturnScreen(onClickBackButton = {/*todo: How to get back to LoggedIn screen with user information? */})
         }
-
     }
 }
-
-//    @Preview
-//    @Composable
-//    private fun AuthenticationScreenPreview() {
-//        MaterialTheme {
-//            AuthenticationScreen()
-//        }
-//    }
 
 private fun NavHostController.navigateSingleTopTo(route: String) =
     this.navigate(route) {

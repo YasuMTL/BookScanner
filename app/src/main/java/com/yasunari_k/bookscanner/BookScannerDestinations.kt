@@ -12,7 +12,7 @@ object AuthenticationCamera : BookScannerDestination {
     override val route = "authentication"
 }
 
-object Account : BookScannerDestination {
+object LoggedIn : BookScannerDestination {
     override val route = "loggedIn"
 }
 
@@ -26,4 +26,4 @@ object Return : BookScannerDestination {
 
 // Screens to be displayed in the top RallyTabRow
 val bookScannerScreens
-    = listOf(Main, AuthenticationCamera, Account, Borrow, Return)
+    = listOf(Main, AuthenticationCamera, LoggedIn, Borrow, Return)
