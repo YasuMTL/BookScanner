@@ -71,8 +71,13 @@ fun ScanView(
             barcodeResults.clear()
             barcodeScanner.close()
 
-                onImageCaptured.invoke()
-            //}
+            val isCorrectQrCode = validateDataFormat(qrCodeViewModel.barcodeContent)
+            if(isCorrectQrCode) {
+                //TODO: Navigate to LoggedIn screen
+                onImageCapturedAndCorrectCode.invoke()
+            } else {
+                onImageCapturedButNotCorrectCode.invoke()
+            }
         }
     )
 
@@ -124,4 +129,10 @@ private fun beep() {
 
 private fun consoleLog(messageToLog: String) {
     Log.i("CameraView.kt", messageToLog)
+}
+
+fun validateDataFormat(dataFromQrCode: String): Boolean {
+    return dataFromQrCode.contains("name") &&
+            dataFromQrCode.contains("date") &&
+            dataFromQrCode.contains("email")
 }
