@@ -15,7 +15,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun LoggedInScreen() {
+fun LoggedInScreen(
+    onClickBorrow: () -> Unit = {},
+    onClickReturn: () -> Unit = {},
+    onClickLogout: () -> Unit = {}
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -40,19 +44,19 @@ fun LoggedInScreen() {
                 .padding(10.dp)
             val fontSize = 32.sp
             Button(
-                onClick = { /*TODO*/ },
+                onClick = onClickBorrow,
                 modifier = width
             ) {
                 Text(text = "Borrow", fontSize = fontSize)
             }
             Button(
-                onClick = { /*TODO*/ },
+                onClick = onClickReturn,
                 modifier = width
             ) {
                 Text(text = "Return", fontSize = fontSize)
             }
             Button(
-                onClick = { /*TODO*/ }
+                onClick = onClickLogout
             ) {
                 Text(text = "Logout")
             }

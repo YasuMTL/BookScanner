@@ -157,7 +157,23 @@ fun BookScannerNavHost(
             )
         }
         composable(route = LoggedIn.route) {
-            LoggedInScreen()
+            LoggedInScreen(
+                onClickBorrow = {
+                    Log.d("LoggedInScreen","Need to scan a barcode for an ISBN number")
+                    navController
+                        .navigateSingleTopTo(Borrow.route)
+                },
+                onClickReturn = {
+                    Log.d("LoggedInScreen","Need to show Borrowed Book List")
+                    navController
+                        .navigateSingleTopTo(Return.route)
+                },
+                onClickLogout = {
+                    Log.d("LoggedInScreen","Logout and get back to MainScreen")
+                    navController
+                        .navigateSingleTopTo(Main.route)
+                }
+            )
         }
         composable(route = Borrow.route) {
             ScanView(
