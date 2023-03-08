@@ -28,7 +28,7 @@ fun LoggedInScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val userName = "Yasunari KanemitsuKanemitsuKanemitsu"
+        val userName = "Justin Trudeau"
         Text(
             text = userName, textAlign = TextAlign.Center, fontSize = 40.sp
         )
@@ -45,18 +45,19 @@ fun LoggedInScreen(
             val fontSize = 32.sp
             Button(
                 onClick = onClickBorrow,
-                modifier = width
+                modifier = width.semantics { contentDescription = "Borrow Button" }
             ) {
                 Text(text = "Borrow", fontSize = fontSize)
             }
             Button(
                 onClick = onClickReturn,
-                modifier = width
+                modifier = width.semantics { contentDescription = "Return Button" }
             ) {
                 Text(text = "Return", fontSize = fontSize)
             }
             Button(
-                onClick = onClickLogout
+                onClick = onClickLogout,
+                modifier = Modifier.semantics { contentDescription = "Logout Button" }
             ) {
                 Text(text = "Logout")
             }
