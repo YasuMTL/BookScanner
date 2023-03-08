@@ -102,6 +102,11 @@ fun ScanView(
     cameraController.bindToLifecycle(lifecycleOwner)
     previewView.controller = cameraController
 
+    CameraView(previewView = previewView)
+}
+
+@Composable
+fun CameraView(previewView: PreviewView) {
     Box(
         contentAlignment = Alignment.BottomCenter,
         modifier = Modifier
