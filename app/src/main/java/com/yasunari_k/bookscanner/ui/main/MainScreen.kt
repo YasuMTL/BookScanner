@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun MainScreen(
@@ -23,12 +25,13 @@ fun MainScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Main Screen")
+        Text(text = "モントリオール日本語センター", fontSize = 20.sp)
+        Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = onClickAuth,
             modifier = Modifier.semantics { contentDescription = "Show Camera View" }
         ) {
-            Text(text = "Auth")
+            Text(text = "Scan QR Code", fontSize = 40.sp)
         }
     }
 }
