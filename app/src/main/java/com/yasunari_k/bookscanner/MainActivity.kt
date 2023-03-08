@@ -156,7 +156,7 @@ fun BookScannerNavHost(
                 }
             )
         }
-        composable(route = Account.route) {
+        composable(route = LoggedIn.route) {
             LoggedInScreen()
         }
         composable(route = Borrow.route) {
