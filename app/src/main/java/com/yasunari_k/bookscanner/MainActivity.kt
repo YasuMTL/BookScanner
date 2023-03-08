@@ -22,8 +22,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.google.mlkit.vision.barcode.common.Barcode
 import com.yasunari_k.bookscanner.ui.account.LoggedInScreen
-import com.yasunari_k.bookscanner.ui.borrow.BorrowScreen
 import com.yasunari_k.bookscanner.ui.main.MainScreen
 import com.yasunari_k.bookscanner.ui.returns.ReturnScreen
 import com.yasunari_k.bookscanner.ui.theme.BookScannerTheme
@@ -139,22 +139,6 @@ fun BookScannerNavHost(
                 onClickAuth = {
                     navController
                         .navigateSingleTopTo(AuthenticationCamera.route)
-                    //Toast.makeText(this@MainActivity, "auth", Toast.LENGTH_SHORT).show()
-                },
-                onClickLoggedIn = {
-                    navController
-                        .navigateSingleTopTo(Account.route)
-                    //Toast.makeText(this@MainActivity, "loggedIn", Toast.LENGTH_SHORT).show()
-                },
-                onClickBorrow = {
-                    navController
-                        .navigateSingleTopTo(Borrow.route)
-                    //Toast.makeText(this@MainActivity, "borrow", Toast.LENGTH_SHORT).show()
-                },
-                onClickReturn = {
-                    navController
-                        .navigateSingleTopTo(Return.route)
-                    //Toast.makeText(this@MainActivity, "return", Toast.LENGTH_SHORT).show()
                 }
             )
         }
@@ -176,17 +160,8 @@ fun BookScannerNavHost(
         composable(route = Return.route) {
             ReturnScreen()
         }
-
     }
 }
-
-//    @Preview
-//    @Composable
-//    private fun AuthenticationScreenPreview() {
-//        MaterialTheme {
-//            AuthenticationScreen()
-//        }
-//    }
 
 private fun NavHostController.navigateSingleTopTo(route: String) =
     this.navigate(route) {

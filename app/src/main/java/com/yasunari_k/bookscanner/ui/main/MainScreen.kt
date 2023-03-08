@@ -13,38 +13,22 @@ import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 fun MainScreen(
-    onClickAuth: () -> Unit = {},
-    onClickLoggedIn: () -> Unit = {},
-    onClickBorrow: () -> Unit = {},
-    onClickReturn: () -> Unit = {},
+    onClickAuth: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
-            .semantics { contentDescription = "Main Screen"},
+            .semantics { contentDescription = "Main Screen" },
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Button(onClick = { /*TODO*/ }) {
-            Text(text = "MainScreen")
-        }
-        Row {
-            Button(
-                onClick = onClickAuth,
-                modifier = Modifier.semantics { contentDescription = "Show Camera View" }
-            ) {
-                Text(text = "Auth")
-            }
-            Button(onClick = onClickLoggedIn) {
-                Text(text = "Loggedin")
-            }
-            Button(onClick = onClickBorrow) {
-                Text(text = "Borrow")
-            }
-            Button(onClick = onClickReturn) {
-                Text(text = "Return")
-            }
+        Text(text = "Main Screen")
+        Button(
+            onClick = onClickAuth,
+            modifier = Modifier.semantics { contentDescription = "Show Camera View" }
+        ) {
+            Text(text = "Auth")
         }
     }
 }
