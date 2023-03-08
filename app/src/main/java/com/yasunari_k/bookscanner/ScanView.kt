@@ -25,11 +25,12 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
-import com.google.mlkit.vision.barcode.common.Barcode
 
 @Composable
-fun CameraView(
-    onImageCaptured: () -> Unit
+fun ScanView(
+    barcodeFormatToScan: Int,
+    onImageCapturedAndCorrectCode: () -> Unit,
+    onImageCapturedButNotCorrectCode: () -> Unit
 ) {
     val context = LocalContext.current
     val cameraController = LifecycleCameraController(context)
@@ -38,7 +39,7 @@ fun CameraView(
     val previewView = remember { PreviewView(context) }
 
     val options = BarcodeScannerOptions.Builder()
-        .setBarcodeFormats(Barcode.FORMAT_ALL_FORMATS)
+        .setBarcodeFormats(barcodeFormatToScan)
         .build()
 
     val barcodeScanner: BarcodeScanner = BarcodeScanning.getClient(options)
@@ -64,12 +65,11 @@ fun CameraView(
             previewView.setOnTouchListener(qrCodeViewModel.barcodeCodeTouchCallback)
             previewView.overlay.clear()
 
-            //if (processingBarcode.compareAndSet(false, true)) {
-                beep()
-                Log.d("dd--", "Result: ${barcodeResults[0]}")
+            beep()
+            Log.d("dd--", "Result: ${barcodeResults[0]}")
 
-                barcodeResults.clear()
-                barcodeScanner.close()
+            barcodeResults.clear()
+            barcodeScanner.close()
 
                 onImageCaptured.invoke()
             //}
