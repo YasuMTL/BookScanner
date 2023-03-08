@@ -190,7 +190,7 @@ fun BookScannerNavHost(
             )
         }
         composable(route = Return.route) {
-            ReturnScreen()
+            ReturnScreen(onClickBackButton = {/*todo: How to get back to LoggedIn screen with user information? */})
         }
     }
 }
