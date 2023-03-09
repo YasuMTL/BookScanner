@@ -1,5 +1,6 @@
 package com.yasunari_k.bookscanner
 
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -14,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -129,6 +131,8 @@ fun BookScannerNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
     NavHost(
         navController = navController,
         startDestination = Main.route,
@@ -145,14 +149,24 @@ fun BookScannerNavHost(
         composable(route = AuthenticationCamera.route) {
             ScanView(
                 Barcode.FORMAT_QR_CODE,
-                onImageCapturedAndCorrectCode = {
-                    Log.d("AuthenticationCamera","Scanned QR Code is conformed!")
-                    navController
-                        .navigateSingleTopTo(LoggedIn.route)
-                },
-                onImageCapturedButNotCorrectCode = {
-                    Log.d("AuthenticationCamera","Scanned QR Code isn't conformed!")
-                    navController.popBackStack()
+                onImageCapturedAndCorrectCode = { fetchedInfo ->
+                    Log.d("AuthenticationCamera","fetchedInfo = $fetchedInfo")
+                    val isFetchedInfoConformed = validateDataFormat(fetchedInfo)
+                    if (isFetchedInfoConformed) {
+                        val isUserAlreadyRegistered = true
+                        if(isUserAlreadyRegistered) {
+                            showToast(context, "User is already registered. $fetchedInfo")
+                            navController
+                                .navigateSingleTopTo(LoggedIn.route)
+                        } /*else {
+                            todo: registerUser()
+                        }*/
+                    } else {
+                        Log.d("MainActivity", "Fetched info isn't conformed...")
+                        showToast(context, "Fetched info isn't conformed... $fetchedInfo")
+                        navController
+                            .navigateSingleTopTo(Main.route)
+                    }
                 }
             )
         }
@@ -177,15 +191,12 @@ fun BookScannerNavHost(
         }
         composable(route = Borrow.route) {
             ScanView(
-                Barcode.TYPE_ISBN,
-                onImageCapturedAndCorrectCode = {
-//                    navController
-//                        .navigateSingleTopTo(LoggedIn.route)
-                    Log.d("BorrowScreen", "Fetch an ISBN number successfully!")
-                },
-                onImageCapturedButNotCorrectCode = {
-                    Log.d("BorrowScreen", "Scanned Barcode doesn't contain ISBN number")
-                    //Toast.makeText(LocalContext.current, "Scanned Barcode doesn't contain ISBN number", Toast.LENGTH_SHORT).show()
+                Barcode.FORMAT_EAN_13,
+                onImageCapturedAndCorrectCode = { fetchedISBN ->
+                    navController
+                        .navigateSingleTopTo(LoggedIn.route)
+                    Log.d("BorrowScreen", "fetchedISBN = $fetchedISBN")
+                    showToast(context, "fetchedISBN = $fetchedISBN")
                 }
             )
         }
@@ -193,6 +204,16 @@ fun BookScannerNavHost(
             ReturnScreen(onClickBackButton = {/*todo: How to get back to LoggedIn screen with user information? */})
         }
     }
+}
+
+private fun showToast(context: Context, message: String) {
+    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+}
+
+fun validateDataFormat(dataFromQrCode: String): Boolean {
+    return dataFromQrCode.contains("name") &&
+            dataFromQrCode.contains("date") &&
+            dataFromQrCode.contains("email")
 }
 
 private fun NavHostController.navigateSingleTopTo(route: String) =

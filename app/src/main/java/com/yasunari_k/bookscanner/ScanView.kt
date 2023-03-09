@@ -25,12 +25,12 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcode
 
 @Composable
 fun ScanView(
     barcodeFormatToScan: Int,
-    onImageCapturedAndCorrectCode: () -> Unit,
-    onImageCapturedButNotCorrectCode: () -> Unit
+    onImageCapturedAndCorrectCode: (String) -> Unit
 ) {
     val context = LocalContext.current
     val cameraController = LifecycleCameraController(context)
@@ -41,6 +41,7 @@ fun ScanView(
     val options = BarcodeScannerOptions.Builder()
         .setBarcodeFormats(barcodeFormatToScan)
         .build()
+    consoleLog("Barcode Format: $barcodeFormatToScan")
 
     val barcodeScanner: BarcodeScanner = BarcodeScanning.getClient(options)
 
@@ -57,12 +58,10 @@ fun ScanView(
                 (barcodeResults.first() == null)
             ) {
                 previewView.overlay.clear()
-                previewView.setOnTouchListener { _, _ -> false } //no-op
                 return@MlKitAnalyzer
             }
 
             val qrCodeViewModel = BarcodeViewModel(barcodeResults[0])
-            previewView.setOnTouchListener(qrCodeViewModel.barcodeCodeTouchCallback)
             previewView.overlay.clear()
 
             beep()
@@ -71,12 +70,20 @@ fun ScanView(
             barcodeResults.clear()
             barcodeScanner.close()
 
-            val isCorrectQrCode = validateDataFormat(qrCodeViewModel.barcodeContent)
-            if(isCorrectQrCode) {
-                //TODO: Navigate to LoggedIn screen
-                onImageCapturedAndCorrectCode.invoke()
-            } else {
-                onImageCapturedButNotCorrectCode.invoke()
+            when(barcodeFormatToScan) {
+                Barcode.FORMAT_QR_CODE -> {
+                    //val isCorrectQrCode = validateDataFormat(qrCodeViewModel.barcodeContent)
+                    //if (isCorrectQrCode) {//todo: You can validate the info on MainActivity?
+                        onImageCapturedAndCorrectCode.invoke(qrCodeViewModel.barcodeContent)
+                    //}
+                }
+                Barcode.FORMAT_EAN_13 -> {
+                    onImageCapturedAndCorrectCode.invoke(qrCodeViewModel.barcodeContent)
+                }
+                else -> {
+                    consoleLog("Unknown... (^^;)")
+                    //TODO: do something to get out of the scan view
+                }
             }
         }
     )
@@ -131,8 +138,8 @@ private fun consoleLog(messageToLog: String) {
     Log.i("CameraView.kt", messageToLog)
 }
 
-fun validateDataFormat(dataFromQrCode: String): Boolean {
-    return dataFromQrCode.contains("name") &&
-            dataFromQrCode.contains("date") &&
-            dataFromQrCode.contains("email")
-}
+//fun validateDataFormat(dataFromQrCode: String): Boolean {
+//    return dataFromQrCode.contains("name") &&
+//            dataFromQrCode.contains("date") &&
+//            dataFromQrCode.contains("email")
+//}
