@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -23,14 +24,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.google.mlkit.vision.barcode.common.Barcode
-import com.yasunari_k.bookscanner.network.BookApi
 import com.yasunari_k.bookscanner.ui.account.LoggedInScreen
 import com.yasunari_k.bookscanner.ui.main.MainScreen
 import com.yasunari_k.bookscanner.ui.returns.ReturnScreen
 import com.yasunari_k.bookscanner.ui.theme.BookScannerTheme
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private var shouldShowCamera: MutableState<Boolean> = mutableStateOf(false)
@@ -47,18 +44,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        val testISBN = "isbn:9784048865395"
-        testBookApi(testISBN)
-
         requestCameraPermission()
-    }
-
-    @OptIn(DelicateCoroutinesApi::class)
-    fun testBookApi(isbnCode: String) {
-        GlobalScope.launch {
-            val bookInfo = BookApi.retrofitService.getBooks(isbnCode)
-            Log.d("testBookApi", "bookInfo = $bookInfo")
-        }
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
@@ -144,6 +130,8 @@ fun BookScannerNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current//For Toast message
+
     NavHost(
         navController = navController,
         startDestination = Main.route,
@@ -197,10 +185,11 @@ fun BookScannerNavHost(
 //                    navController
 //                        .navigateSingleTopTo(LoggedIn.route)
                     Log.d("BorrowScreen", "Fetch an ISBN number successfully!")
+                    Toast.makeText(context, "Fetch an ISBN number successfully!", Toast.LENGTH_SHORT).show()
                 },
                 onImageCapturedButNotCorrectCode = {
                     Log.d("BorrowScreen", "Scanned Barcode doesn't contain ISBN number")
-                    //Toast.makeText(LocalContext.current, "Scanned Barcode doesn't contain ISBN number", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Scanned Barcode doesn't contain ISBN number", Toast.LENGTH_SHORT).show()
                 }
             )
         }
