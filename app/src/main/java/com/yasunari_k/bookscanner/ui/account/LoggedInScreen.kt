@@ -16,20 +16,32 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.yasunari_k.bookscanner.Repository
 import com.yasunari_k.bookscanner.ui.UserInfoViewModel
+import com.yasunari_k.bookscanner.ui.UserInfoViewModel.Companion.provideViewModelFactory
 
 @Composable
 fun LoggedInScreen(
     onClickBorrow: () -> Unit = {},
     onClickReturn: () -> Unit = {},
     onClickLogout: () -> Unit = {},
-    userInfoViewModel: UserInfoViewModel = viewModel()
+    borrowerInfo: String = "",
+    fetchedIsbnCode: String = "",
+    userInfoViewModel: UserInfoViewModel
+        = viewModel(factory = provideViewModelFactory(Repository()))//Want to use hilt or something to provide Repository instance here
 ) {
+    if (borrowerInfo.isNotEmpty()) {
+        userInfoViewModel.setUserInfo(borrowerInfo)
+    }
+
+    if (fetchedIsbnCode.isNotEmpty()) {
+        userInfoViewModel.getBookInfo(fetchedIsbnCode)
+    }
     val bookBorrowerUiState by userInfoViewModel.bookBorrower.collectAsState()
     val bookInfoUiState by userInfoViewModel.bookInfoInMemory.collectAsState()
 
-    bookBorrowerUiState.name
-    bookInfoUiState.items.first().volumeInfo.title
+//    bookBorrowerUiState.name
+//    bookInfoUiState.items.first().volumeInfo.title
 
     Column(
         modifier = Modifier

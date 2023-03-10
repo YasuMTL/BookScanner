@@ -132,6 +132,8 @@ fun BookScannerNavHost(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    var userInfoToPassIn = ""
+    var isbnCodeToPassIn = ""
 
     NavHost(
         navController = navController,
@@ -139,6 +141,7 @@ fun BookScannerNavHost(
         modifier = modifier
     ) {
         composable(route = Main.route) {
+            isbnCodeToPassIn = ""
             MainScreen(
                 onClickAuth = {
                     navController
@@ -184,9 +187,12 @@ fun BookScannerNavHost(
                 },
                 onClickLogout = {
                     Log.d("LoggedInScreen","Logout and get back to MainScreen")
+                    isbnCodeToPassIn = ""
                     navController
                         .navigateSingleTopTo(Main.route)
-                }
+                },
+                borrowerInfo = userInfoToPassIn.ifEmpty { "" },
+                fetchedIsbnCode = isbnCodeToPassIn.ifEmpty { "" }
             )
         }
         composable(route = Borrow.route) {
@@ -197,6 +203,7 @@ fun BookScannerNavHost(
                         .navigateSingleTopTo(LoggedIn.route)
                     Log.d("BorrowScreen", "fetchedISBN = $fetchedISBN")
                     showToast(context, "fetchedISBN = $fetchedISBN")
+                    isbnCodeToPassIn = fetchedISBN
                 }
             )
         }
