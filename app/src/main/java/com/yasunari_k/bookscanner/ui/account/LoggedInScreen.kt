@@ -5,6 +5,8 @@ import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -13,13 +15,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.yasunari_k.bookscanner.ui.UserInfoViewModel
 
 @Composable
 fun LoggedInScreen(
     onClickBorrow: () -> Unit = {},
     onClickReturn: () -> Unit = {},
-    onClickLogout: () -> Unit = {}
+    onClickLogout: () -> Unit = {},
+    userInfoViewModel: UserInfoViewModel = viewModel()
 ) {
+    val bookBorrowerUiState by userInfoViewModel.bookBorrower.collectAsState()
+    val bookInfoUiState by userInfoViewModel.bookInfoInMemory.collectAsState()
+
+    bookBorrowerUiState.name
+    bookInfoUiState.items.first().volumeInfo.title
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -28,7 +39,7 @@ fun LoggedInScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val userName = "Justin Trudeau"
+        val userName = "Justin Trudeau"//TODO: How to get user name?
         Text(
             text = userName, textAlign = TextAlign.Center, fontSize = 40.sp
         )

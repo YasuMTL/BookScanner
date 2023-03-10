@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -129,6 +130,8 @@ fun BookScannerNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current//For Toast message
+
     NavHost(
         navController = navController,
         startDestination = Main.route,
@@ -182,10 +185,11 @@ fun BookScannerNavHost(
 //                    navController
 //                        .navigateSingleTopTo(LoggedIn.route)
                     Log.d("BorrowScreen", "Fetch an ISBN number successfully!")
+                    Toast.makeText(context, "Fetch an ISBN number successfully!", Toast.LENGTH_SHORT).show()
                 },
                 onImageCapturedButNotCorrectCode = {
                     Log.d("BorrowScreen", "Scanned Barcode doesn't contain ISBN number")
-                    //Toast.makeText(LocalContext.current, "Scanned Barcode doesn't contain ISBN number", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Scanned Barcode doesn't contain ISBN number", Toast.LENGTH_SHORT).show()
                 }
             )
         }
