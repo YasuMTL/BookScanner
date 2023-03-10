@@ -1,4 +1,4 @@
-package com.yasunari_k.bookscanner.network
+package com.yasunari_k.bookscanner.model
 
 import com.squareup.moshi.JsonClass
 
