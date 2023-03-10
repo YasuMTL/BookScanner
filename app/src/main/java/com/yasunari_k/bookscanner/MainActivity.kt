@@ -23,10 +23,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.google.mlkit.vision.barcode.common.Barcode
+import com.yasunari_k.bookscanner.network.BookApi
 import com.yasunari_k.bookscanner.ui.account.LoggedInScreen
 import com.yasunari_k.bookscanner.ui.main.MainScreen
 import com.yasunari_k.bookscanner.ui.returns.ReturnScreen
 import com.yasunari_k.bookscanner.ui.theme.BookScannerTheme
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private var shouldShowCamera: MutableState<Boolean> = mutableStateOf(false)
@@ -43,7 +47,18 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        val testISBN = "isbn:9784048865395"
+        testBookApi(testISBN)
+
         requestCameraPermission()
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    fun testBookApi(isbnCode: String) {
+        GlobalScope.launch {
+            val bookInfo = BookApi.retrofitService.getBooks(isbnCode)
+            Log.d("testBookApi", "bookInfo = $bookInfo")
+        }
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {

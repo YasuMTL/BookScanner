@@ -23,9 +23,8 @@ interface BookApiService {
     @GET(" ")
 //    suspend fun getBookInfo(): String
     suspend fun getBooks(
-        @Query("q") inTitle: String,
-        @Query("key") apiKey: String
-    ): Response<String>
+        @Query("q") isbnCode: String
+    ): Book
 }
 
 object BookApi {
