@@ -1,47 +1,34 @@
 package com.yasunari_k.bookscanner.ui.account
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.yasunari_k.bookscanner.Repository
-import com.yasunari_k.bookscanner.ui.UserInfoViewModel
-import com.yasunari_k.bookscanner.ui.UserInfoViewModel.Companion.provideViewModelFactory
+import com.yasunari_k.bookscanner.model.UserData
 
 @Composable
 fun LoggedInScreen(
     onClickBorrow: () -> Unit = {},
     onClickReturn: () -> Unit = {},
-    onClickLogout: () -> Unit = {},
-    borrowerInfo: String = "",
-    fetchedIsbnCode: String = "",
-    userInfoViewModel: UserInfoViewModel
-        = viewModel(factory = provideViewModelFactory(Repository()))//Want to use hilt or something to provide Repository instance here
+    onClickLogout: () -> Unit = {}
 ) {
-    if (borrowerInfo.isNotEmpty()) {
-        userInfoViewModel.setUserInfo(borrowerInfo)
+    val context = LocalContext.current
+
+    val userData = remember {
+        UserData.user
     }
 
-    if (fetchedIsbnCode.isNotEmpty()) {
-        userInfoViewModel.getBookInfo(fetchedIsbnCode)
-    }
-    val bookBorrowerUiState by userInfoViewModel.bookBorrower.collectAsState()
-    val bookInfoUiState by userInfoViewModel.bookInfoInMemory.collectAsState()
-
-//    bookBorrowerUiState.name
-//    bookInfoUiState.items.first().volumeInfo.title
+    Toast.makeText(context, "UserData.user = ${UserData.user}", Toast.LENGTH_LONG).show()
 
     Column(
         modifier = Modifier
@@ -51,7 +38,8 @@ fun LoggedInScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val userName = "Justin Trudeau"//TODO: How to get user name?
+        val userName = userData.name ?: ""
+
         Text(
             text = userName, textAlign = TextAlign.Center, fontSize = 40.sp
         )
@@ -88,10 +76,11 @@ fun LoggedInScreen(
     }
 }
 
+/*
 @Preview
 @Composable
 fun PreviewLoggedInScreen() {
     MaterialTheme {
         LoggedInScreen()
     }
-}
+}*/

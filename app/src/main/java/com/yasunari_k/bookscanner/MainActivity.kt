@@ -25,6 +25,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.google.mlkit.vision.barcode.common.Barcode
+import com.yasunari_k.bookscanner.model.UserData
 import com.yasunari_k.bookscanner.ui.account.LoggedInScreen
 import com.yasunari_k.bookscanner.ui.main.MainScreen
 import com.yasunari_k.bookscanner.ui.returns.ReturnScreen
@@ -132,8 +133,6 @@ fun BookScannerNavHost(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    var userInfoToPassIn = ""
-    var isbnCodeToPassIn = ""
 
     NavHost(
         navController = navController,
@@ -141,7 +140,6 @@ fun BookScannerNavHost(
         modifier = modifier
     ) {
         composable(route = Main.route) {
-            isbnCodeToPassIn = ""
             MainScreen(
                 onClickAuth = {
                     navController
@@ -159,6 +157,7 @@ fun BookScannerNavHost(
                         val isUserAlreadyRegistered = true
                         if(isUserAlreadyRegistered) {
                             showToast(context, "User is already registered. $fetchedInfo")
+                            UserData.convertFetchedInfoToUserData(fetchedInfo)
                             navController
                                 .navigateSingleTopTo(LoggedIn.route)
                         } /*else {
@@ -187,23 +186,18 @@ fun BookScannerNavHost(
                 },
                 onClickLogout = {
                     Log.d("LoggedInScreen","Logout and get back to MainScreen")
-                    isbnCodeToPassIn = ""
+                    UserData.emptyUserInfo()
                     navController
                         .navigateSingleTopTo(Main.route)
-                },
-                borrowerInfo = userInfoToPassIn.ifEmpty { "" },
-                fetchedIsbnCode = isbnCodeToPassIn.ifEmpty { "" }
+                }
             )
         }
         composable(route = Borrow.route) {
             ScanView(
                 Barcode.FORMAT_EAN_13,
                 onImageCapturedAndCorrectCode = { fetchedISBN ->
-                    navController
-                        .navigateSingleTopTo(LoggedIn.route)
                     Log.d("BorrowScreen", "fetchedISBN = $fetchedISBN")
                     showToast(context, "fetchedISBN = $fetchedISBN")
-                    isbnCodeToPassIn = fetchedISBN
                 }
             )
         }
