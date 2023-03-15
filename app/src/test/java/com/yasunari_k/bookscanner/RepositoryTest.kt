@@ -24,11 +24,18 @@ class RepositoryTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun fetchInfo() = runTest {
+    fun fetchInfo_withIsbnCode_success() = runTest {
         val book: Book = repository.fetchInfo("9782894649268")
         val bookInfo = book.items.first().volumeInfo
 
         assert(bookInfo.title == "Le Québécois Pour Mieux Voyager")
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun fetchInfo_withNotIsbnBarcode_fail() = runTest {
+        val book: Book = repository.fetchInfo("819039021111")//Tile Mate
+        assert(book.kind == "No Data Available")
     }
 
     @Test

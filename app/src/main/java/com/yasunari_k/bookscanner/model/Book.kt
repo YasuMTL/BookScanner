@@ -8,6 +8,10 @@ data class Book(
     val totalItems: Int,
     val items: List<Item>
 )
+fun getInitialised(): Book {
+    return Book("No Data Available", 0, emptyList())
+}
+
 
 data class Item(
     val volumeInfo: Info
