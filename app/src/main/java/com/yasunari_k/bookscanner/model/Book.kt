@@ -12,7 +12,6 @@ fun getInitialised(): Book {
     return Book("No Data Available", 0, emptyList())
 }
 
-
 data class Item(
     val volumeInfo: Info
 )

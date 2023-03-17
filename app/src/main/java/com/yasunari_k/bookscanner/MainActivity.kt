@@ -217,6 +217,10 @@ fun validateDataFormat(dataFromQrCode: String): Boolean {
             dataFromQrCode.contains("email")
 }
 
+fun validateIsbn(scannedCode: String): Boolean {
+    return scannedCode.startsWith("978")
+}
+
 private fun NavHostController.navigateSingleTopTo(route: String) =
     this.navigate(route) {
         popUpTo(
