@@ -10,11 +10,11 @@ Scan barcode and let subscribers borrow books from the library
 - Jetpack Compose
 
 ## To Implement
-- [ ] Scan barcode
+- [x] Scan barcode
 - [ ] Borrow a book
 - [ ] Return a book
 - [ ] Note the checkout date in a database
 - [ ] Note who borrow the book in a database
-- [ ] Find the information (title and author) of the scanned book through Google Book API
+- [x] Find the information (title and author) of the scanned book through Google Book API
 - [ ] Warn the borrower who didn't return the book by the return date
 - [ ] Extend the lending period
