@@ -30,7 +30,7 @@ import com.google.mlkit.vision.barcode.common.Barcode
 @Composable
 fun ScanView(
     barcodeFormatToScan: Int,
-    onImageCapturedAndCorrectCode: (String) -> Unit
+    onImageCaptured: (String) -> Unit,
 ) {
     val context = LocalContext.current
     val cameraController = LifecycleCameraController(context)
@@ -65,20 +65,17 @@ fun ScanView(
             previewView.overlay.clear()
 
             beep()
-            Log.d("dd--", "Result: ${barcodeResults[0]}")
 
             barcodeResults.clear()
             barcodeScanner.close()
 
             when(barcodeFormatToScan) {
                 Barcode.FORMAT_QR_CODE -> {
-                    //val isCorrectQrCode = validateDataFormat(qrCodeViewModel.barcodeContent)
-                    //if (isCorrectQrCode) {//todo: You can validate the info on MainActivity?
-                        onImageCapturedAndCorrectCode.invoke(qrCodeViewModel.barcodeContent)
-                    //}
+                    onImageCaptured.invoke(qrCodeViewModel.barcodeContent)
                 }
                 Barcode.FORMAT_EAN_13 -> {
-                    onImageCapturedAndCorrectCode.invoke(qrCodeViewModel.barcodeContent)
+                    val isbnCode = qrCodeViewModel.barcodeContent
+                    onImageCaptured.invoke(isbnCode)
                 }
                 else -> {
                     consoleLog("Unknown... (^^;)")
@@ -137,9 +134,3 @@ private fun beep() {
 private fun consoleLog(messageToLog: String) {
     Log.i("CameraView.kt", messageToLog)
 }
-
-//fun validateDataFormat(dataFromQrCode: String): Boolean {
-//    return dataFromQrCode.contains("name") &&
-//            dataFromQrCode.contains("date") &&
-//            dataFromQrCode.contains("email")
-//}

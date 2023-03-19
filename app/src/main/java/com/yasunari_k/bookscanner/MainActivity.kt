@@ -9,15 +9,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -25,7 +23,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.google.mlkit.vision.barcode.common.Barcode
-import com.yasunari_k.bookscanner.model.UserData
+import com.yasunari_k.bookscanner.ui.UserInfoViewModel
 import com.yasunari_k.bookscanner.ui.account.LoggedInScreen
 import com.yasunari_k.bookscanner.ui.main.MainScreen
 import com.yasunari_k.bookscanner.ui.returns.ReturnScreen
@@ -130,7 +128,9 @@ fun BookScannerApp() {
 @Composable
 fun BookScannerNavHost(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    userInfoViewModel: UserInfoViewModel
+        = viewModel(factory = UserInfoViewModel.provideViewModelFactory(Repository()))//Want to use hilt or something to provide Repository instance here
 ) {
     val context = LocalContext.current
 
@@ -150,24 +150,15 @@ fun BookScannerNavHost(
         composable(route = AuthenticationCamera.route) {
             ScanView(
                 Barcode.FORMAT_QR_CODE,
-                onImageCapturedAndCorrectCode = { fetchedInfo ->
-                    Log.d("AuthenticationCamera","fetchedInfo = $fetchedInfo")
-                    val isFetchedInfoConformed = validateDataFormat(fetchedInfo)
-                    if (isFetchedInfoConformed) {
-                        val isUserAlreadyRegistered = true
-                        if(isUserAlreadyRegistered) {
-                            showToast(context, "User is already registered. $fetchedInfo")
-                            UserData.convertFetchedInfoToUserData(fetchedInfo)
-                            navController
-                                .navigateSingleTopTo(LoggedIn.route)
-                        } /*else {
-                            todo: registerUser()
-                        }*/
+                onImageCaptured = { borrowerInfo ->
+                    val isDataConformed = userInfoViewModel.isQrCodeConformed(borrowerInfo)
+                    if (isDataConformed) {
+                        Log.d("AuthenticationCamera","Main -----------> LoggedIn")
+                        userInfoViewModel.updateBorrowerInfo(borrowerInfo)
+                        navController.navigateSingleTopTo(LoggedIn.route)
                     } else {
-                        Log.d("MainActivity", "Fetched info isn't conformed...")
-                        showToast(context, "Fetched info isn't conformed... $fetchedInfo")
-                        navController
-                            .navigateSingleTopTo(Main.route)
+                        showToast(context, "Scanned QR code is not conformed. Try with another one.")
+                        navController.navigateSingleTopTo(Main.route)
                     }
                 }
             )
@@ -186,18 +177,27 @@ fun BookScannerNavHost(
                 },
                 onClickLogout = {
                     Log.d("LoggedInScreen","Logout and get back to MainScreen")
-                    UserData.emptyUserInfo()
+                    userInfoViewModel.resetInfo()
                     navController
                         .navigateSingleTopTo(Main.route)
-                }
+                },
+                borrowerState = userInfoViewModel.bookBorrower.collectAsState(),
+                borrowedBookState = userInfoViewModel.bookInfoInMemory.collectAsState()
             )
         }
         composable(route = Borrow.route) {
             ScanView(
                 Barcode.FORMAT_EAN_13,
-                onImageCapturedAndCorrectCode = { fetchedISBN ->
-                    Log.d("BorrowScreen", "fetchedISBN = $fetchedISBN")
-                    showToast(context, "fetchedISBN = $fetchedISBN")
+                onImageCaptured = { isbnCode ->
+                    if(userInfoViewModel.isIsbnCodeFormatConformed(isbnCode)) {
+                        userInfoViewModel.updateBookInfo(isbnCode)
+                        showToast(context, "Scanned Barcode is conformed. Now we will fetch the book info with the ISBN code.")
+                    } else {
+                        showToast(context, "Scanned Barcode doesn't contain ISBN code. Please try again.")
+                    }
+
+                    navController
+                        .navigateSingleTopTo(LoggedIn.route)
                 }
             )
         }
@@ -209,16 +209,6 @@ fun BookScannerNavHost(
 
 private fun showToast(context: Context, message: String) {
     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-}
-
-fun validateDataFormat(dataFromQrCode: String): Boolean {
-    return dataFromQrCode.contains("name") &&
-            dataFromQrCode.contains("date") &&
-            dataFromQrCode.contains("email")
-}
-
-fun validateIsbn(scannedCode: String): Boolean {
-    return scannedCode.startsWith("978")
 }
 
 private fun NavHostController.navigateSingleTopTo(route: String) =
