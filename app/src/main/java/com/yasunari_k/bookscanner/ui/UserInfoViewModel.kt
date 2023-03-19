@@ -65,9 +65,36 @@ class UserInfoViewModel(private val repository: Repository): ViewModel() {
     fun updateBookInfo(isbnCode: String) {
         viewModelScope.launch {
             val response: Book = repository.fetchInfo(isbnCode)
-            _bookInfoInMemory.value = response
-            Log.d("ViewModel", "Response: $response")
+
+            if(response.kind.isEmpty()) {
+                _bookInfoInMemory.update {
+                    it.copy(
+                        title = "No Title",
+                        authors = emptyList(),
+                        publishedDate = "",
+                        description = "API couldn't fetch info with the scanned data."
+                    )
+                }
+                Log.d("ViewModel", "Response is empty")
+            } else {
+                val bookInfo = extractInfoFromBook(response)
+                _bookInfoInMemory.update {
+                    it.copy(
+                        title = bookInfo.title,
+                        authors = bookInfo.authors,
+                        publishedDate = bookInfo.publishedDate,
+                        description = bookInfo.description
+                    )
+                }
+                Log.d("ViewModel", "Response: $response")
+            }
         }
+    }
+
+    fun confirmBorrowBook() {
+        //TODO: Send book info to a given Google Sheet
+        val title = bookInfoInMemory.value.title
+        Log.d("confirmBorrowBook", "The function has been called! title=$title")
     }
 
     fun extractInfoFromBook(book: Book):Info {
