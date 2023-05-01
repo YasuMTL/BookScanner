@@ -58,7 +58,6 @@ import java.util.*
 private const val TAG = "MainActivity"
 class MainActivity : ComponentActivity() {
     private lateinit var mAccount: Account
-    private lateinit var mCredential: GoogleAccountCredential
     private var shouldShowCamera: MutableState<Boolean> = mutableStateOf(false)
 
     private lateinit var oneTapClient: SignInClient
@@ -88,17 +87,14 @@ class MainActivity : ComponentActivity() {
         account?.let {
             Log.i(TAG, "displayName = ${account.displayName.toString()}")
         }
-        var isUserSignedOut = true
-        var hasUserNotDeclinedOneTapSignIn = true
+        val isUserSignedOut = true
+        val hasUserNotDeclinedOneTapSignIn = true
 
         configureOneTapClient()
 
         if (hasUserNotDeclinedOneTapSignIn) {
             if (isUserSignedOut) {
-                //todo deactivate this for now
                 displayOneTapSignInUi()
-                //createAccountFromCredentialId()
-                //writeLoginInfo(this)
             }
         }
     }
@@ -111,9 +107,6 @@ class MainActivity : ComponentActivity() {
     ) {
         // サービスのスコープとしてSpreadSheetsのRead/Writeを設定
         val scopes = listOf(SheetsScopes.SPREADSHEETS)
-        // GoogleAccountCredentialを生成
-        // Google Sign-in API実装にて取得したGoogleAccount情報を利用。（社員以外は利用できないように）
-//        credential.selectedAccount = account
         // サービス呼び出し
         val service = Sheets.Builder(
             NetHttpTransport(),
@@ -122,38 +115,13 @@ class MainActivity : ComponentActivity() {
             .build()
 
         Log.d(TAG, credentialState.value.toString())
-        // 書き込む内容を設定
-        val rows = listOf<ValueRange>(
-            ValueRange()
-                .setRange("'${SheetsQuickstart.UNLOCK_LOG_SPREADSHET_SHEETNAME}'!A1") // 書き込み先の「シート名!セル」を指定
-                .setValues(listOf(
-                    listOf<Any>("Test 123")
-                )),
-            ValueRange()
-                .setRange("'${SheetsQuickstart.UNLOCK_LOG_SPREADSHET_SHEETNAME}'!B1") // 書き込み先の「シート名!セル」を指定
-                .setValues(listOf(
-                    listOf<Any>(DateFormat.format("yyyy/MM/dd kk:mm:ss", Date()).toString()) // 日時を書き込む
-                ))
-        )
-        // 複数範囲への書き込みリクエストの作成
-        val body = BatchUpdateValuesRequest()
-            .setValueInputOption("RAW")
-            .setData(rows)
-//        val body = ValueRange().setValues(rows)
 
         // 複数範囲への書き込み処理を実行
         try{
             val spreadsheetId = "1wj15p6XhNNphsMXYP8xQq4ftrxCCjG8mCA-ufPM_ukE"
-            /*val result = service.spreadsheets().values()
-                .append(spreadsheetId, "Sheet1").execute()
-            Log.d("updatedRows", "${result.totalUpdatedRows}")*/
 
             // 二次元配列で書き込む値を保持
             val values: List<List<Any>> = listOf(
-                //listOf("A","B") ,
-                //listOf("C","D"), // Additional rows ...
-                //listOf("Test User", bookName, "2023-04-04") // Additional rows ...
-                //listOf(borrowerName, bookName, LocalDate.now()) // Additional rows ...
                 listOf(borrowerName, bookName, borrowerEmail, getCurrentDate())
             )
 
@@ -174,7 +142,7 @@ class MainActivity : ComponentActivity() {
 
             if (e is UserRecoverableAuthIOException) {
                 Log.d("updatedRows", "e is UserRecoverableAuthIOException")
-                startActivityForResult(e.getIntent(), REQ_USER_AUTHRIZATION);
+                startActivityForResult(e.getIntent(), REQ_USER_AUTHRIZATION)
             } else {
                 // other cases
                 Log.d("updatedRows", "e is not UserRecoverableAuthIOException")
@@ -192,7 +160,7 @@ class MainActivity : ComponentActivity() {
         return current
     }
 
-    fun deleteRow(credentialState: StateFlow<GoogleAccountCredential?>) {
+    private fun deleteRow(credentialState: StateFlow<GoogleAccountCredential?>) {
         val tag = "deleteRow"
         val service = Sheets.Builder(
             NetHttpTransport(),
@@ -206,7 +174,6 @@ class MainActivity : ComponentActivity() {
 
             val deleteDimensionsRequest = DeleteDimensionRequest()
             val dimensionRange = DimensionRange().apply {
-                //sheetId = 0
                 dimension = "ROWS"
                 startIndex = 0
                 endIndex = 2
@@ -227,7 +194,7 @@ class MainActivity : ComponentActivity() {
 
             if (e is UserRecoverableAuthIOException) {
                 Log.d(tag, "e is UserRecoverableAuthIOException")
-                startActivityForResult(e.getIntent(), REQ_USER_AUTHRIZATION);
+                startActivityForResult(e.getIntent(), REQ_USER_AUTHRIZATION)
             } else {
                 // other cases
                 Log.d(tag, "e is not UserRecoverableAuthIOException")
@@ -237,7 +204,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun displayOneTapSignInUi() {
+    private fun displayOneTapSignInUi() {
         val TAG = "displayOneTapSignInUI"
 
         oneTapClient.beginSignIn(signInRequest)
@@ -340,13 +307,13 @@ class MainActivity : ComponentActivity() {
             println("User ID: $userId")
 
             // Get profile information from payload
-            val email: String = payload.getEmail()
-            val emailVerified: Boolean = java.lang.Boolean.valueOf(payload.getEmailVerified())
-            val name = payload.get("name")
-            val pictureUrl = payload.get("picture")
-            val locale = payload.get("locale")
-            val familyName = payload.get("family_name")
-            val givenName = payload.get("given_name")
+//            val email: String = payload.getEmail()
+//            val emailVerified: Boolean = java.lang.Boolean.valueOf(payload.getEmailVerified())
+//            val name = payload.get("name")
+//            val pictureUrl = payload.get("picture")
+//            val locale = payload.get("locale")
+//            val familyName = payload.get("family_name")
+//            val givenName = payload.get("given_name")
 
             // Use or store profile information
             // ...
@@ -355,7 +322,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun configureOneTapClient() {
+    private fun configureOneTapClient() {
         val yourWebServerClientId = "976682064008-guhrb4bp4r9h1e9ke5dcu4fj2tpuoqlr.apps.googleusercontent.com"
 
         oneTapClient = Identity.getSignInClient(this)
@@ -532,14 +499,10 @@ class MainActivity : ComponentActivity() {
                     onImageCaptured = { isbnCode ->
                         if(userInfoViewModel.isIsbnCodeFormatConformed(isbnCode)) {
                             try {
-//                                userInfoViewModel.updateBookInfo(isbnCode)
-//                                showToast(context, "Scanned Barcode is conformed. Now we will fetch the book info with the ISBN code.")
-
                                 coroutineScope.launch {
                                     withContext(Dispatchers.IO) {
                                         userInfoViewModel.updateBookInfo(isbnCode)
                                         Log.d(TAG, "Scanned Barcode is conformed. Now we will fetch the book info with the ISBN code.")
-                                        //showToast(context, "Scanned Barcode is conformed. Now we will fetch the book info with the ISBN code.")
 
                                         writeLoginInfo(
                                             userInfoViewModel.credentialState,
@@ -548,8 +511,6 @@ class MainActivity : ComponentActivity() {
                                             borrowerEmail = userInfoViewModel.bookBorrower.value.emailAddress
                                         )//todo: title is still empty
                                         Log.d(TAG, "title = ${userInfoViewModel.bookInfoInMemory.value.title}")
-                                        //showToast(context, "title = ${userInfoViewModel.bookInfoInMemory.value.title}")
-                                        //deleteRow(userInfoViewModel.credentialState)
                                     }
                                 }
                             } catch (e: IOException) {
