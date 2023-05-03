@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.text.format.DateFormat
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
