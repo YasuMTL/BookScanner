@@ -1,8 +1,5 @@
 package com.yasunari_k.bookscanner.model
 
-import com.squareup.moshi.JsonClass
-
-@JsonClass(generateAdapter = true)
 data class Book(
     val kind: String,
     val totalItems: Int,
