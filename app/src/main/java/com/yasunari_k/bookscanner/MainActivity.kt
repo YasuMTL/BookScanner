@@ -528,7 +528,14 @@ class MainActivity : ComponentActivity() {
                 )
             }
             composable(route = Return.route) {
-                ReturnScreen(onClickBackButton = {/*todo: How to get back to LoggedIn screen with user information? */})
+                ReturnScreen(
+                    onClickBackButton = {
+                        /*todo: How to get back to LoggedIn screen with user information? */
+                        showToast(context, "Return screen --> LoggedIn Screen")
+                        navController
+                            .navigateSingleTopTo(LoggedIn.route)
+                    }
+                )
             }
         }
     }

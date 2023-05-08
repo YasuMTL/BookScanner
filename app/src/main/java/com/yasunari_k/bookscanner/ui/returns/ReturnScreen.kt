@@ -1,22 +1,34 @@
 package com.yasunari_k.bookscanner.ui.returns
 
-import androidx.compose.foundation.layout.*
+import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 @Composable
 fun ReturnScreen(
     onClickBackButton: () -> Unit = {}
 ) {
+    val borrowedBooks = remember { DataProvider.borrowedBookList }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -25,10 +37,14 @@ fun ReturnScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "Display Borrowed Books List here!",
-            fontSize = 30.sp
-        )
+        LazyColumn {
+            items(
+                items = borrowedBooks,
+                itemContent = {
+                    BorrowedBookListItem(borrowedBook = it)
+                }
+            )
+        }
         Button(
             onClick = onClickBackButton,
             modifier = Modifier
@@ -39,10 +55,44 @@ fun ReturnScreen(
     }
 }
 
+@Composable
+fun BorrowedBookListItem(borrowedBook: BorrowedBook) {
+    val context = LocalContext.current
+
+    Row {
+        Column {
+            Text(text = borrowedBook.title)
+            Text(text = borrowedBook.dateToReturn)
+        }
+        Button(
+            onClick = {
+                Toast.makeText(context, "${borrowedBook.title}を本当に返却してもよろしいですか？", Toast.LENGTH_SHORT).show()
+            }
+        ) {
+            Text(text = "返却する")
+        }
+    }
+}
+
 @Preview
 @Composable
 fun PreviewReturnScreen() {
     MaterialTheme {
         ReturnScreen()
     }
+}
+
+//Some data to mock the presentation
+data class BorrowedBook(
+    val title: String,
+    val dateToReturn: String
+)
+object DataProvider {
+    val borrowedBookList = listOf(
+        BorrowedBook("test 1", "2023-06-01"),
+        BorrowedBook("test 2", "2023-06-02"),
+        BorrowedBook("test 3", "2023-06-03"),
+        BorrowedBook("test 4", "2023-06-04"),
+        BorrowedBook("test 5", "2023-06-05"),
+    )
 }
