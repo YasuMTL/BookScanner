@@ -44,6 +44,7 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.yasunari_k.bookscanner.ui.UserInfoViewModel
 import com.yasunari_k.bookscanner.ui.account.LoggedInScreen
 import com.yasunari_k.bookscanner.ui.main.MainScreen
+import com.yasunari_k.bookscanner.ui.returns.BorrowedBook
 import com.yasunari_k.bookscanner.ui.returns.ReturnScreen
 import com.yasunari_k.bookscanner.ui.theme.BookScannerTheme
 import kotlinx.coroutines.Dispatchers
@@ -456,9 +457,14 @@ class MainActivity : ComponentActivity() {
                             //TODO: Google Sign-in for using Sheets API
                             userInfoViewModel.saveCredentials(context, mAccount)
 
+                            //Begin to fetch the info of the books the borrower has for now
                             coroutineScope.launch {
                                 withContext(Dispatchers.IO) {
-                                    deleteRow(userInfoViewModel.credentialState)
+                                    userInfoViewModel.bookBorrower.value.borrowedBooksList.clear()
+                                    //Fetch the sorted list and save it in ViewModel for later use
+                                    val sortedBookList = userInfoViewModel.read(userInfoViewModel.credentialState) //as Collection<String>
+
+                                    userInfoViewModel.bookBorrower.value.borrowedBooksList.addAll(sortedBookList)
                                 }
                             }
 
@@ -528,13 +534,18 @@ class MainActivity : ComponentActivity() {
                 )
             }
             composable(route = Return.route) {
+                Toast.makeText(context, "", Toast.LENGTH_SHORT).show()
+                val state = userInfoViewModel.bookBorrower.collectAsState()
+                val listBorrowedBook: List<BorrowedBook> = state.value.borrowedBooksList
+
                 ReturnScreen(
                     onClickBackButton = {
                         /*todo: How to get back to LoggedIn screen with user information? */
                         showToast(context, "Return screen --> LoggedIn Screen")
                         navController
                             .navigateSingleTopTo(LoggedIn.route)
-                    }
+                    },
+                    listBorrowedBook = listBorrowedBook,
                 )
             }
         }

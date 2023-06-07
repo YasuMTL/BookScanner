@@ -22,6 +22,7 @@ import com.yasunari_k.bookscanner.model.Book
 import com.yasunari_k.bookscanner.model.BookBorrower
 import com.yasunari_k.bookscanner.model.Info
 import com.yasunari_k.bookscanner.network.SheetApi
+import com.yasunari_k.bookscanner.ui.returns.BorrowedBook
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,7 +39,8 @@ class UserInfoViewModel(private val repository: Repository): ViewModel() {
         BookBorrower(
             name = "",
             emailAddress = "",
-            registerDate = ""
+            registerDate = "",
+            borrowedBooksList = mutableListOf()
         )
     )
     val bookBorrower: StateFlow<BookBorrower> = _bookBorrower.asStateFlow()
@@ -75,7 +77,6 @@ class UserInfoViewModel(private val repository: Repository): ViewModel() {
 
     fun isQrCodeConformed(dataFromQrCode: String): Boolean {
         return dataFromQrCode.contains("name") &&
-                dataFromQrCode.contains("date") &&
                 dataFromQrCode.contains("email")
     }
 
@@ -257,6 +258,65 @@ class UserInfoViewModel(private val repository: Repository): ViewModel() {
 //                // other cases
 //            }
         }
+    }
+
+    fun read(
+        credentialState: StateFlow<GoogleAccountCredential?>
+    ): List<BorrowedBook> {
+        //Fetch all of the rows
+        val listOfBorrowedBook = mutableListOf<BorrowedBook>()
+
+        //To sort out later
+        val borrowerEmail = bookBorrower.value.emailAddress
+        Log.d("read()", "borrowerEmail = $borrowerEmail")
+
+        // サービス呼び出し
+        val sheetsService = Sheets.Builder(
+            NetHttpTransport(),
+            GsonFactory.getDefaultInstance(), credentialState.value)
+            .setApplicationName("Book Scanner")
+            .build()
+
+        // 値取得
+        val response = sheetsService
+            .spreadsheets().values()
+            .get("1wj15p6XhNNphsMXYP8xQq4ftrxCCjG8mCA-ufPM_ukE", "TestSheet!A2:F")
+            .execute()
+
+        val values = response.getValues()
+        Log.d("read()", "response = $response")
+        Log.d("read()", "values = $values")
+
+        // Stringにキャストする
+        val a1 =  values[0][0] as String
+        //TODO: Look for the rows whose email address is equal to "borrowerEmail"
+        var rowNumber = 0
+        values.onEach {
+            val emailAddressTemp = values[rowNumber][2]
+            if (emailAddressTemp == borrowerEmail) {
+                val title: String = values[rowNumber][1] as String
+                val returnDate: String = values[rowNumber][3] as String
+                listOfBorrowedBook.add(
+                    BorrowedBook(title, returnDate)
+                )
+            }
+
+            rowNumber++
+        }
+        //values = [
+        // [Yasu Test, Test Title, yasunari.k@hotmail.com, 2023-05-26, 2023-05-27, yes],
+        // [1, Test Title, yasunari.k@hotmail.com, 2023-05-26, 2023-05-27],
+        // [2, Test Title, yasunari.k@hotmail.com, 2023-05-26, 2023-05-27],
+        // [3, Test Title, yasunari.k@hotmail.com, 2023-05-26, 2023-05-27]]
+
+        Log.i("MainActivity", a1)
+
+//        return mutableListOf(
+//            BorrowedBook("test 1", "2023-06-01"),
+//            BorrowedBook("test 2", "2023-06-25"),
+//            BorrowedBook("test 3", "2023-07-01")
+//        )//TODO: for now
+        return listOfBorrowedBook
     }
 
     // Define ViewModel factory in a companion object
