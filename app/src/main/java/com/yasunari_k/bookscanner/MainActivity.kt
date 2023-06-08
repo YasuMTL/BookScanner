@@ -44,7 +44,6 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.yasunari_k.bookscanner.ui.UserInfoViewModel
 import com.yasunari_k.bookscanner.ui.account.LoggedInScreen
 import com.yasunari_k.bookscanner.ui.main.MainScreen
-import com.yasunari_k.bookscanner.ui.returns.BorrowedBook
 import com.yasunari_k.bookscanner.ui.returns.ReturnScreen
 import com.yasunari_k.bookscanner.ui.theme.BookScannerTheme
 import kotlinx.coroutines.Dispatchers
@@ -535,8 +534,6 @@ class MainActivity : ComponentActivity() {
             }
             composable(route = Return.route) {
                 Toast.makeText(context, "", Toast.LENGTH_SHORT).show()
-                val state = userInfoViewModel.bookBorrower.collectAsState()
-                val listBorrowedBook: List<BorrowedBook> = state.value.borrowedBooksList
 
                 ReturnScreen(
                     onClickBackButton = {
@@ -545,7 +542,7 @@ class MainActivity : ComponentActivity() {
                         navController
                             .navigateSingleTopTo(LoggedIn.route)
                     },
-                    listBorrowedBook = listBorrowedBook,
+                    borrowerState = userInfoViewModel.bookBorrower.collectAsState()
                 )
             }
         }
