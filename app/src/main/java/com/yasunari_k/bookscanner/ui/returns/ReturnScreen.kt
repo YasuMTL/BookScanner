@@ -25,6 +25,7 @@ import com.yasunari_k.bookscanner.model.BookBorrower
 @Composable
 fun ReturnScreen(
     onClickBackButton: () -> Unit = {},
+    onClickBorrowedBook: (String) -> Unit = {},
     borrowerState: State<BookBorrower>,
 ) {
     val borrowedBooks = borrowerState.value.borrowedBooksList
@@ -39,10 +40,13 @@ fun ReturnScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         LazyColumn {
-            items(//How to pass in the borrower's name? Does it really need to identify the book to return?
+            items(
                 items = borrowedBooks,
                 itemContent = {
-                    BorrowedBookListItem(borrowedBook = it)
+                    BorrowedBookListItem(
+                        borrowedBook = it,
+                        onClickBorrowedBook = { onClickBorrowedBook(it.title) }
+                    )
                 }
             )
         }
@@ -57,7 +61,10 @@ fun ReturnScreen(
 }
 
 @Composable
-fun BorrowedBookListItem(borrowedBook: BorrowedBook) {
+fun BorrowedBookListItem(
+    borrowedBook: BorrowedBook,
+    onClickBorrowedBook: () -> Unit = {}
+) {
     val context = LocalContext.current
 
     Row {
@@ -72,9 +79,11 @@ fun BorrowedBookListItem(borrowedBook: BorrowedBook) {
                 // 1. Ask user if they want to confirm the return of the book
                 // 2. Proceed the book return by noting returned date in the field of "Book was returned" on the spreadsheet
                 val borrower = borrowedBook.borrowerName
+                borrowedBook.dateToReturn
                 //Need to read the data on the Spreadsheet first in order to know in which row you have to fill up the field of Book was returned
 
                 //TODO: read() to get the row number
+                onClickBorrowedBook()
 
                 //write the date of today in the field with the row number
             }

@@ -461,7 +461,7 @@ class MainActivity : ComponentActivity() {
                                 withContext(Dispatchers.IO) {
                                     userInfoViewModel.bookBorrower.value.borrowedBooksList.clear()
                                     //Fetch the sorted list and save it in ViewModel for later use
-                                    val sortedBookList = userInfoViewModel.read(userInfoViewModel.credentialState) //as Collection<String>
+                                    val sortedBookList = userInfoViewModel.readSpecificBorrowerBookList(userInfoViewModel.credentialState) //as Collection<String>
 
                                     userInfoViewModel.bookBorrower.value.borrowedBooksList.addAll(sortedBookList)
                                 }
@@ -533,9 +533,18 @@ class MainActivity : ComponentActivity() {
                 )
             }
             composable(route = Return.route) {
-                Toast.makeText(context, "", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Return Screen", Toast.LENGTH_SHORT).show()
 
                 ReturnScreen(
+                    onClickBorrowedBook = { bookTitle ->
+                        val rowNumberOfBookToReturn = userInfoViewModel.findBookToReturn(bookTitle)
+                        coroutineScope.launch {
+                            withContext(Dispatchers.IO) {
+                                Log.d("ReturnScreen", "rowNumberOfBookToReturn=$rowNumberOfBookToReturn")
+                                userInfoViewModel.returnBook(rowNumberOfBookToReturn)
+                            }
+                        }
+                    },
                     onClickBackButton = {
                         /*todo: How to get back to LoggedIn screen with user information? */
                         showToast(context, "Return screen --> LoggedIn Screen")

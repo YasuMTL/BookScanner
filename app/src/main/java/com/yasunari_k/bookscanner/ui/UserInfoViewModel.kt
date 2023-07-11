@@ -39,7 +39,7 @@ class UserInfoViewModel(private val repository: Repository): ViewModel() {
         BookBorrower(
             name = "",
             emailAddress = "",
-            registerDate = "",
+            registerDate = "",//todo: No more need the "registerDate"
             borrowedBooksList = mutableListOf()
         )
     )
@@ -50,6 +50,11 @@ class UserInfoViewModel(private val repository: Repository): ViewModel() {
 
     private val _credentialState = MutableStateFlow<GoogleAccountCredential?>(null)
     val credentialState: StateFlow<GoogleAccountCredential?> = _credentialState.asStateFlow()
+
+    private val _wholeBorrowedBookListState = MutableStateFlow<MutableList<MutableList<Any>>>(
+        mutableListOf()
+    )
+    val wholeBorrowedBookListState: StateFlow<MutableList<MutableList<Any>>> = _wholeBorrowedBookListState.asStateFlow()
 
     fun updateBorrowerInfo(borrowerInfo: String) {
         if (!isQrCodeConformed(borrowerInfo)) {
@@ -238,7 +243,7 @@ class UserInfoViewModel(private val repository: Repository): ViewModel() {
         try{
             val result = service.spreadsheets().values().batchUpdate(SheetsQuickstart.UNLOCK_LOG_SPREADSHEET_ID, body).execute()
             Log.d("updatedRows", "${result.totalUpdatedRows}")
-        }catch (e: java.io.IOException){
+        }catch (e: IOException){
             // 例外処理
             Log.d("updatedRows", "error = $e")
 
@@ -260,7 +265,7 @@ class UserInfoViewModel(private val repository: Repository): ViewModel() {
         }
     }
 
-    fun read(
+    fun readSpecificBorrowerBookList(
         credentialState: StateFlow<GoogleAccountCredential?>
     ): List<BorrowedBook> {
         //Fetch all of the rows
@@ -270,6 +275,45 @@ class UserInfoViewModel(private val repository: Repository): ViewModel() {
         val borrowerEmail = bookBorrower.value.emailAddress
         Log.d("read()", "borrowerEmail = $borrowerEmail")
 
+        val values = readWholeList(credentialState)
+        Log.d("read()", "values = $values")
+
+        // Stringにキャストする
+        val a1 =  values[0][0] as String
+        //TODO: Look for the rows whose email address is equal to "borrowerEmail"
+        var rowNumber = 0
+        values.onEach {
+            val emailAddressTemp = values[rowNumber][2]
+            if (emailAddressTemp == borrowerEmail) {
+                val borrowerName: String = values[rowNumber][0] as String
+                val title: String = values[rowNumber][1] as String
+                val returnDate: String = values[rowNumber][3] as String
+                listOfBorrowedBook.add(
+                    BorrowedBook(borrowerName, title, returnDate)
+                )
+            }
+
+            rowNumber++
+        }
+        //values = [
+            // [Yasu Test, Test Title, yasunari.k@hotmail.com, 2023-05-26, 2023-05-27, yes],
+            // [1, Test Title, yasunari.k@hotmail.com, 2023-05-26, 2023-05-27],
+            // [2, Test Title, yasunari.k@hotmail.com, 2023-05-26, 2023-05-27],
+            // [3, Test Title, yasunari.k@hotmail.com, 2023-05-26, 2023-05-27]
+        // ]
+
+        Log.i("MainActivity", a1)
+
+//        return mutableListOf(
+//            BorrowedBook("test 1", "2023-06-01"),
+//            BorrowedBook("test 2", "2023-06-25"),
+//            BorrowedBook("test 3", "2023-07-01")
+//        )//TODO: for now
+        return listOfBorrowedBook
+    }
+    fun readWholeList(
+        credentialState: StateFlow<GoogleAccountCredential?>
+    ): MutableList<MutableList<Any>> {
         // サービス呼び出し
         val sheetsService = Sheets.Builder(
             NetHttpTransport(),
@@ -287,36 +331,96 @@ class UserInfoViewModel(private val repository: Repository): ViewModel() {
         Log.d("read()", "response = $response")
         Log.d("read()", "values = $values")
 
-        // Stringにキャストする
-        val a1 =  values[0][0] as String
-        //TODO: Look for the rows whose email address is equal to "borrowerEmail"
+        _wholeBorrowedBookListState.value.clear()
+        _wholeBorrowedBookListState.value.addAll(values)
+
+        return values
+    }
+
+    //fun sortListWithBorrowerEmail(
+    fun findBookToReturn(
+        bookTitleToReturn: String
+    //): BorrowedBook {
+    ): Int {
+        val listOfAllBorrowedBooks = wholeBorrowedBookListState.value
+        //TODO: "BorrowedBook" does not contain emailAddress ! What to do?
+        val borrowerEmail = bookBorrower.value.emailAddress
+        val listOfBorrowedBook = mutableListOf<BorrowedBook>()
         var rowNumber = 0
-        values.onEach {
-            val emailAddressTemp = values[rowNumber][2]
-            if (emailAddressTemp == borrowerEmail) {
-                val title: String = values[rowNumber][1] as String
-                val returnDate: String = values[rowNumber][3] as String
-                listOfBorrowedBook.add(
-                    BorrowedBook(title, returnDate)
-                )
+
+        listOfAllBorrowedBooks.onEach {
+            val titleTemp = listOfAllBorrowedBooks[rowNumber][1] as String
+            val emailAddressTemp = listOfAllBorrowedBooks[rowNumber][2] as String
+
+            if (
+                titleTemp == bookTitleToReturn &&
+                emailAddressTemp == borrowerEmail
+            ) {
+                //val borrowerName: String = listOfAllBorrowedBooks[rowNumber][0] as String
+                //val returnDate: String = listOfAllBorrowedBooks[rowNumber][3] as String
+
+                //val bookToReturn = BorrowedBook(borrowerName, titleTemp, returnDate)
+
+                //return bookToReturn
+                return rowNumber + 1
             }
 
             rowNumber++
         }
-        //values = [
-        // [Yasu Test, Test Title, yasunari.k@hotmail.com, 2023-05-26, 2023-05-27, yes],
-        // [1, Test Title, yasunari.k@hotmail.com, 2023-05-26, 2023-05-27],
-        // [2, Test Title, yasunari.k@hotmail.com, 2023-05-26, 2023-05-27],
-        // [3, Test Title, yasunari.k@hotmail.com, 2023-05-26, 2023-05-27]]
 
-        Log.i("MainActivity", a1)
+        //return BorrowedBook("", "", "")
+        return 0
+    }
 
-//        return mutableListOf(
-//            BorrowedBook("test 1", "2023-06-01"),
-//            BorrowedBook("test 2", "2023-06-25"),
-//            BorrowedBook("test 3", "2023-07-01")
-//        )//TODO: for now
-        return listOfBorrowedBook
+    //fun returnBook(bookToReturn: BorrowedBook) {
+    fun returnBook(rowNumberOfBookToReturn: Int) {
+        val scopes = listOf(SheetsScopes.SPREADSHEETS)
+        val service = Sheets.Builder(
+            NetHttpTransport(),
+            GsonFactory.getDefaultInstance(), _credentialState.value)
+            .setApplicationName("Book Scanner")
+            .build()
+        Log.d(TAG, _credentialState.value.toString())
+
+        val cellOfBookWasReturned = "F$rowNumberOfBookToReturn"
+
+        val rows = listOf<ValueRange>(
+            ValueRange()
+                //.setRange("'${SheetsQuickstart.UNLOCK_LOG_SPREADSHET_SHEETNAME}'!F1")
+                .setRange("'${SheetsQuickstart.UNLOCK_LOG_SPREADSHET_SHEETNAME}'!$cellOfBookWasReturned")
+                .setValues(listOf(
+                    listOf<Any>(DateFormat.format("yyyy-MM-dd kk:mm", Date()).toString())
+                ))
+        )
+
+        Log.d("returnBook()", "rows=$rows")
+
+        // 複数範囲への書き込みリクエストの作成
+        val body = BatchUpdateValuesRequest()
+            .setValueInputOption("RAW")
+            .setData(rows)
+
+        // 複数範囲への書き込み処理を実行
+        try{
+            val spreadsheetId = "1wj15p6XhNNphsMXYP8xQq4ftrxCCjG8mCA-ufPM_ukE"
+            Log.d("updatedRows", "SheetsQuickstart.UNLOCK_LOG_SPREADSHEET_ID = ${SheetsQuickstart.UNLOCK_LOG_SPREADSHEET_ID}")
+            val result = service.spreadsheets().
+                //values().batchUpdate(SheetsQuickstart.UNLOCK_LOG_SPREADSHEET_ID, body).execute()
+                values().batchUpdate(spreadsheetId, body).execute()
+            Log.d("updatedRows", "${result.totalUpdatedRows}")
+        }catch (e: IOException){
+            Log.d("updatedRows", "error = $e")
+
+            if (e is UserRecoverableAuthIOException) {
+                Log.d("updatedRows", "e is UserRecoverableAuthIOException")
+                throw e
+            } else {
+                // other cases
+                Log.d("updatedRows", "e is not UserRecoverableAuthIOException")
+            }
+        }catch (e: UserRecoverableAuthIOException) {
+            Log.d("updatedRows", "error = $e")
+        }
     }
 
     // Define ViewModel factory in a companion object
