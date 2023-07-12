@@ -93,13 +93,12 @@ fun BorrowedBookListItem(
             Text(
                 text = borrowedBook.title,
                 textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Bold
             )
             Text(text = borrowedBook.dateToReturn)
         }
         Button(
             modifier = Modifier.
-                //size(height = 50.dp).
                 height(50.dp).
                 padding(5.dp).
                 weight(2F),
@@ -143,6 +142,7 @@ fun PreviewReturnScreen() {
                         BorrowedBook("Test Yasu", "Test 1", "Someday"),
                         //BorrowedBook("Kanemitsu", "Mini dictionnaire Français-Allemand Allemand-Français", "2023-07-08 16:59"),
                         BorrowedBook("Kanemitsu", "Mini dictionnaire Français-Allemand aaaa", "2023-07-08 16:59"),
+                        BorrowedBook("Kanemitsu", "ももたろうと金太郎", "2023-07-08 16:59"),
                         BorrowedBook("Test Yasu", "Test 3", "Someday")
                     )
                 )
