@@ -185,6 +185,9 @@ class UserInfoViewModel(private val repository: Repository): ViewModel() {
             _bookInfoInMemory.update {
                 it.copy(title = "", authors = emptyList(), publishedDate = "", description = "")
             }
+            _wholeBorrowedBookListState.update {
+                it.apply { clear() }
+            }
         }
     }
 
@@ -288,9 +291,13 @@ class UserInfoViewModel(private val repository: Repository): ViewModel() {
                 val borrowerName: String = values[rowNumber][0] as String
                 val title: String = values[rowNumber][1] as String
                 val returnDate: String = values[rowNumber][3] as String
-                listOfBorrowedBook.add(
-                    BorrowedBook(borrowerName, title, returnDate)
-                )
+                val wasBookReturned: String = values[rowNumber][5] as String
+
+                if(wasBookReturned.equals("no", true)) {
+                    listOfBorrowedBook.add(
+                        BorrowedBook(borrowerName, title, returnDate)
+                    )
+                }
             }
 
             rowNumber++
@@ -351,18 +358,22 @@ class UserInfoViewModel(private val repository: Repository): ViewModel() {
         listOfAllBorrowedBooks.onEach {
             val titleTemp = listOfAllBorrowedBooks[rowNumber][1] as String
             val emailAddressTemp = listOfAllBorrowedBooks[rowNumber][2] as String
+            val wasBookReturned = listOfAllBorrowedBooks[rowNumber][5] as String//This could be null
+            //borrowedBooks=[BorrowedBook(borrowerName=Kanemitsu, title=Mini dictionnaire Français-Allemand Allemand-Français, dateToReturn=2023-07-08 16:59), BorrowedBook(borrowerName=Kanemitsu, title=Le Québécois Pour Mieux Voyager, dateToReturn=2023-07-10 21:32), BorrowedBook(borrowerName=Kanemitsu, title=El rapto de la Bella Durmiente, dateToReturn=2023-07-12 14:47), BorrowedBook(borrowerName=Kanemitsu, title=El Diario de Ana Frank, dateToReturn=2023-07-12 14:48), BorrowedBook(borrowerName=Kanemitsu, title=Fahrenheit 451, dateToReturn=2023-07-12 14:48), BorrowedBook(borrowerName=Kanemitsu, title=ディコ仏和辞典, dateToReturn=2023-07-12 14:48), BorrowedBook(borrowerName=Kanemitsu, title=Bonne Nuit, Canada!, dateToReturn=2023-07-16 17:18)]
+            //Log.d("findBookToReturn", "rowNumber=$rowNumber : titleTemp=$titleTemp")
 
-            if (
-                titleTemp == bookTitleToReturn &&
-                emailAddressTemp == borrowerEmail
-            ) {
-                //val borrowerName: String = listOfAllBorrowedBooks[rowNumber][0] as String
-                //val returnDate: String = listOfAllBorrowedBooks[rowNumber][3] as String
-
-                //val bookToReturn = BorrowedBook(borrowerName, titleTemp, returnDate)
-
-                //return bookToReturn
-                return rowNumber + 1
+            if (wasBookReturned.equals("no", true)) {
+                if (
+                    titleTemp == bookTitleToReturn &&
+                    emailAddressTemp == borrowerEmail
+                ) {
+                    Log.d(
+                        "findBookToReturn",
+                        "rowNumber=$rowNumber titleTemp=$titleTemp emailAddressTemp=$emailAddressTemp"
+                    )
+                    //return bookToReturn
+                    return rowNumber + 2//Add 2 because 1.) row number on the sheet begins by not 0 but 1 and 2.) "listOfAllBorrowedBooks" contains only borrowed book name as of the second row
+                }
             }
 
             rowNumber++
@@ -374,6 +385,10 @@ class UserInfoViewModel(private val repository: Repository): ViewModel() {
 
     //fun returnBook(bookToReturn: BorrowedBook) {
     fun returnBook(rowNumberOfBookToReturn: Int) {
+        if(rowNumberOfBookToReturn == 0) {
+            return
+        }
+
         val scopes = listOf(SheetsScopes.SPREADSHEETS)
         val service = Sheets.Builder(
             NetHttpTransport(),

@@ -121,7 +121,7 @@ class MainActivity : ComponentActivity() {
 
             // 二次元配列で書き込む値を保持
             val values: List<List<Any>> = listOf(
-                listOf(borrowerName, bookName, borrowerEmail, getCurrentDate())
+                listOf(borrowerName, bookName, borrowerEmail, getCurrentDate(), "", "No")
             )
 
             val body = ValueRange().setValues(values)
@@ -484,6 +484,18 @@ class MainActivity : ComponentActivity() {
                     },
                     onClickReturn = {
                         Log.d("LoggedInScreen","Need to show Borrowed Book List")
+
+                        //todo: test
+                        coroutineScope.launch {
+                            withContext(Dispatchers.IO) {
+                                userInfoViewModel.bookBorrower.value.borrowedBooksList.clear()
+                                //Fetch the sorted list and save it in ViewModel for later use
+                                val sortedBookList = userInfoViewModel.readSpecificBorrowerBookList(userInfoViewModel.credentialState) //as Collection<String>
+
+                                userInfoViewModel.bookBorrower.value.borrowedBooksList.addAll(sortedBookList)
+                            }
+                        }
+
                         navController
                             .navigateSingleTopTo(Return.route)
                     },
@@ -542,6 +554,9 @@ class MainActivity : ComponentActivity() {
                             withContext(Dispatchers.IO) {
                                 Log.d("ReturnScreen", "rowNumberOfBookToReturn=$rowNumberOfBookToReturn")
                                 userInfoViewModel.returnBook(rowNumberOfBookToReturn)
+                                if(rowNumberOfBookToReturn == 0) {
+                                    showToast(context, "Nothing to return!")
+                                }
                             }
                         }
                     },
