@@ -236,6 +236,10 @@ class MainActivity : ComponentActivity() {
                     val username = credential.id
                     val password = credential.password
 
+                    Log.d(TAG, "Got ID token = $idToken")
+                    Log.d(TAG, "Got username = $username")
+                    Log.d(TAG, "Got password = $password")
+
                     when {
                         idToken != null -> {
                             // Got an ID token from Google. Use it to authenticate
@@ -483,19 +487,6 @@ class MainActivity : ComponentActivity() {
                             .navigateSingleTopTo(Borrow.route)
                     },
                     onClickReturn = {
-                        Log.d("LoggedInScreen","Need to show Borrowed Book List")
-
-                        //todo: test
-                        coroutineScope.launch {
-                            withContext(Dispatchers.IO) {
-                                userInfoViewModel.bookBorrower.value.borrowedBooksList.clear()
-                                //Fetch the sorted list and save it in ViewModel for later use
-                                val sortedBookList = userInfoViewModel.readSpecificBorrowerBookList(userInfoViewModel.credentialState) //as Collection<String>
-
-                                userInfoViewModel.bookBorrower.value.borrowedBooksList.addAll(sortedBookList)
-                            }
-                        }
-
                         navController
                             .navigateSingleTopTo(Return.route)
                     },
@@ -545,7 +536,7 @@ class MainActivity : ComponentActivity() {
                 )
             }
             composable(route = Return.route) {
-                Toast.makeText(context, "Return Screen", Toast.LENGTH_SHORT).show()
+                Log.d("ReturnScreen","Return Screen showing up...")
 
                 ReturnScreen(
                     onClickBorrowedBook = { bookTitle ->
@@ -561,8 +552,18 @@ class MainActivity : ComponentActivity() {
                         }
                     },
                     onClickBackButton = {
-                        /*todo: How to get back to LoggedIn screen with user information? */
                         showToast(context, "Return screen --> LoggedIn Screen")
+                        coroutineScope.launch {
+                            withContext(Dispatchers.IO) {
+                                Log.d("ReturnScreen","Updating BookList...")
+                                userInfoViewModel.bookBorrower.value.borrowedBooksList.clear()
+                                //Fetch the sorted list and save it in ViewModel for later use
+                                val sortedBookList = userInfoViewModel.readSpecificBorrowerBookList(userInfoViewModel.credentialState) //as Collection<String>
+
+                                userInfoViewModel.bookBorrower.value.borrowedBooksList.addAll(sortedBookList)
+                                Log.d("ReturnInScreen","BookList has been updated!")
+                            }
+                        }
                         navController
                             .navigateSingleTopTo(LoggedIn.route)
                     },

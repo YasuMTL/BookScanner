@@ -25,10 +25,10 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -47,9 +47,9 @@ fun ReturnScreen(
     onClickBorrowedBook: (String) -> Unit = {},
     borrowerState: State<BookBorrower>,
 ) {
-    val borrowedBooks = borrowerState.value.borrowedBooksList
-    //TODO Fetch the borrowed books list first
-    Log.d("ReturnScreen", "borrowedBooks=$borrowedBooks")
+    val borrowedBooksList = remember {
+        borrowerState.value.borrowedBooksList.toMutableStateList()
+    }
 
     Column(
         modifier = Modifier
@@ -61,15 +61,14 @@ fun ReturnScreen(
     ) {
         LazyColumn {
             items(
-                items = borrowedBooks,
+                items = borrowedBooksList,
                 itemContent = { borrowedBook ->
                     BorrowedBookListItem(
                         borrowedBook = borrowedBook,
                         onClickBorrowedBook = {
                             val bookTitleToErase = borrowedBook.title
                             onClickBorrowedBook(bookTitleToErase)
-
-                            //borrowedBooks.remove(borrowedBook)
+                            borrowedBooksList.remove(borrowedBook)
                         }
                     )
                 }
@@ -92,8 +91,6 @@ fun BorrowedBookListItem(
     borrowedBook: BorrowedBook,
     onClickBorrowedBook: () -> Unit = {}
 ) {
-    val context = LocalContext.current
-
     val returnBook = remember { mutableStateOf(false) }
     val callDialog = remember { mutableStateOf(false) }
     Log.d("ReturnScreen", "returnBook=$returnBook")
