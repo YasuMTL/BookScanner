@@ -17,5 +17,5 @@ data class Info(
     val title: String,
     val authors: List<String>,
     val publishedDate: String,
-    val description: String
+    val description: String?
 )

@@ -22,6 +22,7 @@ import com.yasunari_k.bookscanner.model.Book
 import com.yasunari_k.bookscanner.model.BookBorrower
 import com.yasunari_k.bookscanner.model.Info
 import com.yasunari_k.bookscanner.network.SheetApi
+import com.yasunari_k.bookscanner.ui.returns.BorrowedBook
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,7 +39,8 @@ class UserInfoViewModel(private val repository: Repository): ViewModel() {
         BookBorrower(
             name = "",
             emailAddress = "",
-            registerDate = ""
+            registerDate = "",//todo: No more need the "registerDate"
+            borrowedBooksList = mutableListOf()
         )
     )
     val bookBorrower: StateFlow<BookBorrower> = _bookBorrower.asStateFlow()
@@ -48,6 +50,11 @@ class UserInfoViewModel(private val repository: Repository): ViewModel() {
 
     private val _credentialState = MutableStateFlow<GoogleAccountCredential?>(null)
     val credentialState: StateFlow<GoogleAccountCredential?> = _credentialState.asStateFlow()
+
+    private val _wholeBorrowedBookListState = MutableStateFlow<MutableList<MutableList<Any>>>(
+        mutableListOf()
+    )
+    val wholeBorrowedBookListState: StateFlow<MutableList<MutableList<Any>>> = _wholeBorrowedBookListState.asStateFlow()
 
     fun updateBorrowerInfo(borrowerInfo: String) {
         if (!isQrCodeConformed(borrowerInfo)) {
@@ -75,7 +82,6 @@ class UserInfoViewModel(private val repository: Repository): ViewModel() {
 
     fun isQrCodeConformed(dataFromQrCode: String): Boolean {
         return dataFromQrCode.contains("name") &&
-                dataFromQrCode.contains("date") &&
                 dataFromQrCode.contains("email")
     }
 
@@ -179,6 +185,9 @@ class UserInfoViewModel(private val repository: Repository): ViewModel() {
             _bookInfoInMemory.update {
                 it.copy(title = "", authors = emptyList(), publishedDate = "", description = "")
             }
+            _wholeBorrowedBookListState.update {
+                it.apply { clear() }
+            }
         }
     }
 
@@ -237,7 +246,7 @@ class UserInfoViewModel(private val repository: Repository): ViewModel() {
         try{
             val result = service.spreadsheets().values().batchUpdate(SheetsQuickstart.UNLOCK_LOG_SPREADSHEET_ID, body).execute()
             Log.d("updatedRows", "${result.totalUpdatedRows}")
-        }catch (e: java.io.IOException){
+        }catch (e: IOException){
             // 例外処理
             Log.d("updatedRows", "error = $e")
 
@@ -256,6 +265,176 @@ class UserInfoViewModel(private val repository: Repository): ViewModel() {
 //            } else {
 //                // other cases
 //            }
+        }
+    }
+
+    fun readSpecificBorrowerBookList(
+        credentialState: StateFlow<GoogleAccountCredential?>
+    ): List<BorrowedBook> {
+        //Fetch all of the rows
+        val listOfBorrowedBook = mutableListOf<BorrowedBook>()
+
+        //To sort out later
+        val borrowerEmail = bookBorrower.value.emailAddress
+        Log.d("read()", "borrowerEmail = $borrowerEmail")
+
+        val values = readWholeList(credentialState)
+        Log.d("read()", "values = $values")
+
+        // Stringにキャストする
+        val a1 =  values[0][0] as String
+        //TODO: Look for the rows whose email address is equal to "borrowerEmail"
+        var rowNumber = 0
+        values.onEach {
+            val emailAddressTemp = values[rowNumber][2]
+            if (emailAddressTemp == borrowerEmail) {
+                val borrowerName: String = values[rowNumber][0] as String
+                val title: String = values[rowNumber][1] as String
+                val returnDate: String = values[rowNumber][3] as String
+                val wasBookReturned: String = values[rowNumber][5] as String
+
+                if(wasBookReturned.equals("no", true)) {
+                    listOfBorrowedBook.add(
+                        BorrowedBook(borrowerName, title, returnDate)
+                    )
+                }
+            }
+
+            rowNumber++
+        }
+        //values = [
+            // [Yasu Test, Test Title, yasunari.k@hotmail.com, 2023-05-26, 2023-05-27, yes],
+            // [1, Test Title, yasunari.k@hotmail.com, 2023-05-26, 2023-05-27],
+            // [2, Test Title, yasunari.k@hotmail.com, 2023-05-26, 2023-05-27],
+            // [3, Test Title, yasunari.k@hotmail.com, 2023-05-26, 2023-05-27]
+        // ]
+
+        Log.i("MainActivity", a1)
+
+//        return mutableListOf(
+//            BorrowedBook("test 1", "2023-06-01"),
+//            BorrowedBook("test 2", "2023-06-25"),
+//            BorrowedBook("test 3", "2023-07-01")
+//        )//TODO: for now
+        return listOfBorrowedBook
+    }
+    fun readWholeList(
+        credentialState: StateFlow<GoogleAccountCredential?>
+    ): MutableList<MutableList<Any>> {
+        // サービス呼び出し
+        val sheetsService = Sheets.Builder(
+            NetHttpTransport(),
+            GsonFactory.getDefaultInstance(), credentialState.value)
+            .setApplicationName("Book Scanner")
+            .build()
+
+        // 値取得
+        val response = sheetsService
+            .spreadsheets().values()
+            .get("1wj15p6XhNNphsMXYP8xQq4ftrxCCjG8mCA-ufPM_ukE", "TestSheet!A2:F")
+            .execute()
+
+        val values = response.getValues()
+        Log.d("read()", "response = $response")
+        Log.d("read()", "values = $values")
+
+        _wholeBorrowedBookListState.value.clear()
+        _wholeBorrowedBookListState.value.addAll(values)
+
+        return values
+    }
+
+    //fun sortListWithBorrowerEmail(
+    fun findBookToReturn(
+        bookTitleToReturn: String
+    //): BorrowedBook {
+    ): Int {
+        val listOfAllBorrowedBooks = wholeBorrowedBookListState.value
+        //TODO: "BorrowedBook" does not contain emailAddress ! What to do?
+        val borrowerEmail = bookBorrower.value.emailAddress
+        val listOfBorrowedBook = mutableListOf<BorrowedBook>()
+        var rowNumber = 0
+
+        listOfAllBorrowedBooks.onEach {
+            val titleTemp = listOfAllBorrowedBooks[rowNumber][1] as String
+            val emailAddressTemp = listOfAllBorrowedBooks[rowNumber][2] as String
+            val wasBookReturned = listOfAllBorrowedBooks[rowNumber][5] as String//This could be null
+            //borrowedBooks=[BorrowedBook(borrowerName=Kanemitsu, title=Mini dictionnaire Français-Allemand Allemand-Français, dateToReturn=2023-07-08 16:59), BorrowedBook(borrowerName=Kanemitsu, title=Le Québécois Pour Mieux Voyager, dateToReturn=2023-07-10 21:32), BorrowedBook(borrowerName=Kanemitsu, title=El rapto de la Bella Durmiente, dateToReturn=2023-07-12 14:47), BorrowedBook(borrowerName=Kanemitsu, title=El Diario de Ana Frank, dateToReturn=2023-07-12 14:48), BorrowedBook(borrowerName=Kanemitsu, title=Fahrenheit 451, dateToReturn=2023-07-12 14:48), BorrowedBook(borrowerName=Kanemitsu, title=ディコ仏和辞典, dateToReturn=2023-07-12 14:48), BorrowedBook(borrowerName=Kanemitsu, title=Bonne Nuit, Canada!, dateToReturn=2023-07-16 17:18)]
+            //Log.d("findBookToReturn", "rowNumber=$rowNumber : titleTemp=$titleTemp")
+
+            if (wasBookReturned.equals("no", true)) {
+                if (
+                    titleTemp == bookTitleToReturn &&
+                    emailAddressTemp == borrowerEmail
+                ) {
+                    Log.d(
+                        "findBookToReturn",
+                        "rowNumber=$rowNumber titleTemp=$titleTemp emailAddressTemp=$emailAddressTemp"
+                    )
+                    //return bookToReturn
+                    return rowNumber + 2//Add 2 because 1.) row number on the sheet begins by not 0 but 1 and 2.) "listOfAllBorrowedBooks" contains only borrowed book name as of the second row
+                }
+            }
+
+            rowNumber++
+        }
+
+        //return BorrowedBook("", "", "")
+        return 0
+    }
+
+    //fun returnBook(bookToReturn: BorrowedBook) {
+    fun returnBook(rowNumberOfBookToReturn: Int) {
+        if(rowNumberOfBookToReturn == 0) {
+            return
+        }
+
+        val scopes = listOf(SheetsScopes.SPREADSHEETS)
+        val service = Sheets.Builder(
+            NetHttpTransport(),
+            GsonFactory.getDefaultInstance(), _credentialState.value)
+            .setApplicationName("Book Scanner")
+            .build()
+        Log.d(TAG, _credentialState.value.toString())
+
+        val cellOfBookWasReturned = "F$rowNumberOfBookToReturn"
+
+        val rows = listOf<ValueRange>(
+            ValueRange()
+                //.setRange("'${SheetsQuickstart.UNLOCK_LOG_SPREADSHET_SHEETNAME}'!F1")
+                .setRange("'${SheetsQuickstart.UNLOCK_LOG_SPREADSHET_SHEETNAME}'!$cellOfBookWasReturned")
+                .setValues(listOf(
+                    listOf<Any>(DateFormat.format("yyyy-MM-dd kk:mm", Date()).toString())
+                ))
+        )
+
+        Log.d("returnBook()", "rows=$rows")
+
+        // 複数範囲への書き込みリクエストの作成
+        val body = BatchUpdateValuesRequest()
+            .setValueInputOption("RAW")
+            .setData(rows)
+
+        // 複数範囲への書き込み処理を実行
+        try{
+            val spreadsheetId = "1wj15p6XhNNphsMXYP8xQq4ftrxCCjG8mCA-ufPM_ukE"
+            Log.d("updatedRows", "SheetsQuickstart.UNLOCK_LOG_SPREADSHEET_ID = ${SheetsQuickstart.UNLOCK_LOG_SPREADSHEET_ID}")
+            val result = service.spreadsheets().
+                //values().batchUpdate(SheetsQuickstart.UNLOCK_LOG_SPREADSHEET_ID, body).execute()
+                values().batchUpdate(spreadsheetId, body).execute()
+            Log.d("updatedRows", "${result.totalUpdatedRows}")
+        }catch (e: IOException){
+            Log.d("updatedRows", "error = $e")
+
+            if (e is UserRecoverableAuthIOException) {
+                Log.d("updatedRows", "e is UserRecoverableAuthIOException")
+                throw e
+            } else {
+                // other cases
+                Log.d("updatedRows", "e is not UserRecoverableAuthIOException")
+            }
+        }catch (e: UserRecoverableAuthIOException) {
+            Log.d("updatedRows", "error = $e")
         }
     }
 

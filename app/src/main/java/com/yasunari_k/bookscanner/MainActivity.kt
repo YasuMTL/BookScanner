@@ -121,7 +121,7 @@ class MainActivity : ComponentActivity() {
 
             // 二次元配列で書き込む値を保持
             val values: List<List<Any>> = listOf(
-                listOf(borrowerName, bookName, borrowerEmail, getCurrentDate())
+                listOf(borrowerName, bookName, borrowerEmail, getCurrentDate(), "", "No")
             )
 
             val body = ValueRange().setValues(values)
@@ -235,6 +235,10 @@ class MainActivity : ComponentActivity() {
                     val idToken = credential.googleIdToken
                     val username = credential.id
                     val password = credential.password
+
+                    Log.d(TAG, "Got ID token = $idToken")
+                    Log.d(TAG, "Got username = $username")
+                    Log.d(TAG, "Got password = $password")
 
                     when {
                         idToken != null -> {
@@ -456,9 +460,14 @@ class MainActivity : ComponentActivity() {
                             //TODO: Google Sign-in for using Sheets API
                             userInfoViewModel.saveCredentials(context, mAccount)
 
+                            //Begin to fetch the info of the books the borrower has for now
                             coroutineScope.launch {
                                 withContext(Dispatchers.IO) {
-                                    deleteRow(userInfoViewModel.credentialState)
+                                    userInfoViewModel.bookBorrower.value.borrowedBooksList.clear()
+                                    //Fetch the sorted list and save it in ViewModel for later use
+                                    val sortedBookList = userInfoViewModel.readSpecificBorrowerBookList(userInfoViewModel.credentialState) //as Collection<String>
+
+                                    userInfoViewModel.bookBorrower.value.borrowedBooksList.addAll(sortedBookList)
                                 }
                             }
 
@@ -478,7 +487,6 @@ class MainActivity : ComponentActivity() {
                             .navigateSingleTopTo(Borrow.route)
                     },
                     onClickReturn = {
-                        Log.d("LoggedInScreen","Need to show Borrowed Book List")
                         navController
                             .navigateSingleTopTo(Return.route)
                     },
@@ -528,7 +536,39 @@ class MainActivity : ComponentActivity() {
                 )
             }
             composable(route = Return.route) {
-                ReturnScreen(onClickBackButton = {/*todo: How to get back to LoggedIn screen with user information? */})
+                Log.d("ReturnScreen","Return Screen showing up...")
+
+                ReturnScreen(
+                    onClickBorrowedBook = { bookTitle ->
+                        val rowNumberOfBookToReturn = userInfoViewModel.findBookToReturn(bookTitle)
+                        coroutineScope.launch {
+                            withContext(Dispatchers.IO) {
+                                Log.d("ReturnScreen", "rowNumberOfBookToReturn=$rowNumberOfBookToReturn")
+                                userInfoViewModel.returnBook(rowNumberOfBookToReturn)
+                                if(rowNumberOfBookToReturn == 0) {
+                                    showToast(context, "Nothing to return!")
+                                }
+                            }
+                        }
+                    },
+                    onClickBackButton = {
+                        showToast(context, "Return screen --> LoggedIn Screen")
+                        coroutineScope.launch {
+                            withContext(Dispatchers.IO) {
+                                Log.d("ReturnScreen","Updating BookList...")
+                                userInfoViewModel.bookBorrower.value.borrowedBooksList.clear()
+                                //Fetch the sorted list and save it in ViewModel for later use
+                                val sortedBookList = userInfoViewModel.readSpecificBorrowerBookList(userInfoViewModel.credentialState) //as Collection<String>
+
+                                userInfoViewModel.bookBorrower.value.borrowedBooksList.addAll(sortedBookList)
+                                Log.d("ReturnInScreen","BookList has been updated!")
+                            }
+                        }
+                        navController
+                            .navigateSingleTopTo(LoggedIn.route)
+                    },
+                    borrowerState = userInfoViewModel.bookBorrower.collectAsState()
+                )
             }
         }
     }
