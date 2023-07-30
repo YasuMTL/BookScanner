@@ -153,10 +153,9 @@ class MainActivity : ComponentActivity() {
 
     private fun getCurrentDate(): String {
         val time = Calendar.getInstance().time
-        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm")
-        val current = formatter.format(time)
+        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.CANADA_FRENCH)
 
-        return current
+        return formatter.format(time)
     }
 
     private fun deleteRow(credentialState: StateFlow<GoogleAccountCredential?>) {
