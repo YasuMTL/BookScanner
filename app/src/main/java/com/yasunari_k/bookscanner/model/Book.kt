@@ -14,8 +14,8 @@ data class Item(
 )
 
 data class Info(
-    val title: String,
-    val authors: List<String>,
-    val publishedDate: String,
-    val description: String?
+    val title: String? = null,
+    val authors: List<String>? = null,
+    val publishedDate: String? = null,
+    val description: String? = null
 )

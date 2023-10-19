@@ -36,7 +36,7 @@ fun LoggedInScreen(
         BorrowerName(borrowerName = borrowerName)
 
         Text(
-            text = borrowedBookState.value.title, textAlign = TextAlign.Center, fontSize = 40.sp
+            text = borrowedBookState.value.title ?: "Not Found", textAlign = TextAlign.Center, fontSize = 40.sp
         )
 
         Column(modifier = Modifier

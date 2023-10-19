@@ -100,9 +100,9 @@ class MainActivity : ComponentActivity() {
 
     fun writeLoginInfo(
         credentialState: StateFlow<GoogleAccountCredential?>,
-        borrowerName: String,
-        bookName: String,
-        borrowerEmail: String
+        borrowerName: String?,
+        bookName: String?,
+        borrowerEmail: String?
     ) {
         // サービスのスコープとしてSpreadSheetsのRead/Writeを設定
         val scopes = listOf(SheetsScopes.SPREADSHEETS)
@@ -120,7 +120,7 @@ class MainActivity : ComponentActivity() {
             val spreadsheetId = "1wj15p6XhNNphsMXYP8xQq4ftrxCCjG8mCA-ufPM_ukE"
 
             // 二次元配列で書き込む値を保持
-            val values: List<List<Any>> = listOf(
+            val values: List<List<String?>> = listOf(
                 listOf(borrowerName, bookName, borrowerEmail, getCurrentDate(), "", "No")
             )
 
