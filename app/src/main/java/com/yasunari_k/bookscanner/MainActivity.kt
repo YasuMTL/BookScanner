@@ -121,7 +121,7 @@ class MainActivity : ComponentActivity() {
 
             // 二次元配列で書き込む値を保持
             val values: List<List<String?>> = listOf(
-                listOf(borrowerName, bookName, borrowerEmail, getCurrentDate(), "", "No")
+                listOf(borrowerName, bookName, borrowerEmail, getCurrentDate(), getDateTwoWeeksLater(), "No")
             )
 
             val body = ValueRange().setValues(values)
@@ -156,6 +156,14 @@ class MainActivity : ComponentActivity() {
         val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.CANADA_FRENCH)
 
         return formatter.format(time)
+    }
+
+    private fun getDateTwoWeeksLater(): String {
+        val time = Calendar.getInstance()
+        time.add(Calendar.DAY_OF_YEAR, 14)
+        val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.CANADA_FRENCH)
+
+        return formatter.format(time.time)
     }
 
     private fun deleteRow(credentialState: StateFlow<GoogleAccountCredential?>) {
